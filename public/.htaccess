@@ -1,0 +1,9 @@
+# public/.htaccess
+RewriteEngine On
+
+# Pozwól na dostęp do plików statycznych
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Przekieruj na index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
