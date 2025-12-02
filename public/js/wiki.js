@@ -93,6 +93,27 @@ $(document).ready(function() {
     });
 });
 
+// Accordion z jQuery
+$(document).on('click', '.accordion-header', function() {
+    const item = $(this).closest('.accordion-item');
+    const content = item.find('.accordion-content');
+    const icon = item.find('.accordion-icon');
+    
+    // Zamknij inne (opcjonalnie)
+    // $('.accordion-content').not(content).slideUp(300);
+    // $('.accordion-icon').not(icon).html('¡').css('transform', 'rotate(0)');
+    
+    // Toggle obecny
+    content.slideToggle(300);
+    
+    if (content.is(':visible')) {
+        icon.html('^').css('transform', 'rotate(180deg)');
+    } else {
+        icon.html('¡').css('transform', 'rotate(0)');
+    }
+});
+
+
 function displaySearchResults(results) {
     const container = $('#search-results');
     container.empty();

@@ -16,7 +16,8 @@
             <a href="/admin" class="btn active">📊 Dashboard</a>
             <a href="/admin/users" class="btn">👥 Użytkownicy</a>
             <a href="/admin/categories" class="btn">📁 Kategorie</a>
-            <a href="/admin/customization" class="btn">🎨 Customizacja</a>
+            <a href="/admin/customize" class="btn">🎨 Customizacja</a>
+            <a href="/analytics" class="btn">📊 Statystyki</a>
         </div>
         
         <div class="stats-grid">

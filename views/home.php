@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wiki Engine - Strona Główna</title>
+    <title><?= htmlspecialchars(ThemeLoader::get('site_name', 'Wiki Engine')) ?> - Strona Główna</title>
     <link rel="stylesheet" href="/css/style.css">
+    <?= ThemeLoader::generateCSS() ?>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
     
     <div class="container">
-        <h1>🏠 Witaj w Wiki Engine</h1>
+        <h1>🏠 Witaj w <?= htmlspecialchars(ThemeLoader::get('site_name', 'Wiki Engine')) ?></h1>
         
         <div class="stats">
             <span>📚 Wszystkich stron: <?= count($pages) ?></span>
@@ -39,5 +40,6 @@
             </ul>
         <?php endif; ?>
     </div>
+    <?php include __DIR__ . '/partials/footer.php'; ?>
 </body>
 </html>

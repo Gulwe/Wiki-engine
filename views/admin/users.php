@@ -75,6 +75,7 @@
                         <th>Rola</th>
                         <th>Stron</th>
                         <th>Edycji</th>
+                        <th>Komentarzy</th>
                         <th>Dołączył</th>
                         <th>Akcje</th>
                     </tr>
@@ -97,12 +98,13 @@
                             </td>
                             <td><?= $user['pages_created'] ?></td>
                             <td><?= $user['total_edits'] ?></td>
+                            <td><?= $user['total_comments'] ?? 0 ?></td>
                             <td><?= date('d.m.Y', strtotime($user['created_at'])) ?></td>
                             <td>
                                 <?php if ($user['user_id'] !== $_SESSION['user_id']): ?>
                                     <a href="/admin/users/delete/<?= $user['user_id'] ?>" 
                                        class="btn-small btn-danger" 
-                                       onclick="return confirm('Czy na pewno usunąć użytkownika <?= htmlspecialchars($user['username']) ?>?')">
+                                       onclick="return confirm('Czy na pewno usunąć użytkownika <?= htmlspecialchars($user['username']) ?>?\n\nUsuniete zostaną:\n- Wszystkie utworzone strony\n- Wszystkie komentarze\n- Cała historia edycji')">
                                         🗑️ Usuń
                                     </a>
                                 <?php else: ?>
@@ -115,5 +117,7 @@
             </table>
         </div>
     </div>
+    
+    <?php include __DIR__ . '/../partials/footer.php'; ?>
 </body>
 </html>

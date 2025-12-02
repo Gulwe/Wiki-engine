@@ -4,17 +4,46 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 
-// Obsługa plików statycznych (CSS, JS, obrazki)
-$requestUri = $_SERVER['REQUEST_URI'];
-if (preg_match('/\.(css|js|jpg|jpeg|png|gif|ico)$/', $requestUri)) {
-    return false; // Pozwól serwerowi obsłużyć plik
+require_once __DIR__ . '/../core/Database.php';
+require_once __DIR__ . '/../core/ThemeLoader.php';
+
+// Sprawd藕 tryb maintenance
+$maintenanceMode = ThemeLoader::get('maintenance_mode', '0');
+if ($maintenanceMode == '1' && (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin')) {
+    http_response_code(503);
+    ?>
+    <!DOCTYPE html>
+    <html lang="pl">
+    <head>
+        <meta charset="UTF-8">
+        <title>Konserwacja - <?= ThemeLoader::get('site_name', 'Wiki Engine') ?></title>
+        <link rel="stylesheet" href="/css/style.css">
+        <?= ThemeLoader::generateCSS() ?>
+    </head>
+    <body>
+        <div class="container" style="text-align: center; padding: 100px 20px;">
+            <h1 style="font-size: 72px;">馃敡</h1>
+            <h1>Strona w Trybie Konserwacji</h1>
+            <p style="font-size: 18px; color: #a78bfa;">
+                Wracamy wkr贸tce! Prowadzimy prace konserwacyjne.
+            </p>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
 }
 
-// Obsługa folderów js, css, uploads
-if (preg_match('#^/(js|css|uploads)/#', parse_url($requestUri, PHP_URL_PATH))) {
+// Obs艂uga plik贸w statycznych (CSS, JS, obrazki)
+$requestUri = $_SERVER['REQUEST_URI'];
+if (preg_match('/\.(css|js|jpg|jpeg|png|gif|ico|svg|webp)$/', $requestUri)) {
+    return false; // Pozw贸l serwerowi obs艂u偶y膰 plik
+}
+
+// Obs艂uga folder贸w js, css, uploads
+if (preg_match('#^/(js|css|uploads|misc)/#', parse_url($requestUri, PHP_URL_PATH))) {
     return false;
 }
-
 
 // Autoload
 spl_autoload_register(function ($class) {
@@ -33,20 +62,26 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Inicjalizacja połączenia z bazą
+// Inicjalizacja po艂膮czenia z baz膮
 Database::getInstance();
 
 // Parser URL
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
-// === ROUTING (KOLEJNOŚĆ MA ZNACZENIE!) ===
+// === ROUTING (KOLEJNO艢膯 MA ZNACZENIE!) ===
 
-// Strona główna
+// Strona g艂贸wna
 if ($uri === '/' || $uri === '') {
     $pageModel = new Page();
     $pages = $pageModel->getAll();
     require __DIR__ . '/../views/home.php';
+    exit;
+}
+
+// === DIAGNOSTIC (DODAJ TO) ===
+if ($uri === '/diagnostic') {
+    require __DIR__ . '/../views/diagnostic.php';
     exit;
 }
 
@@ -85,7 +120,6 @@ if ($uri === '/api/search' && $method === 'GET') {
         
         $searchTerm = '%' . $query . '%';
         
-        // Prostsze zapytanie z CONCAT
         $stmt = $db->prepare("
             SELECT p.page_id, p.slug, p.title,
                    SUBSTRING(COALESCE(r.content, ''), 1, 150) as excerpt
@@ -106,8 +140,7 @@ if ($uri === '/api/search' && $method === 'GET') {
     exit;
 }
 
-
-// API: Podgląd
+// API: Podgl膮d
 if ($uri === '/api/preview' && $method === 'POST') {
     require_once __DIR__ . '/../core/WikiParser.php';
     $parser = new WikiParser();
@@ -116,7 +149,7 @@ if ($uri === '/api/preview' && $method === 'POST') {
     exit;
 }
 
-// NOWA STRONA - MUSI BYĆ PRZED /page/{slug}!
+// NOWA STRONA - MUSI BY膯 PRZED /page/{slug}!
 if ($uri === '/page/new') {
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login');
@@ -134,7 +167,7 @@ if ($uri === '/page/new') {
     exit;
 }
 
-// Wyświetl konkretną rewizję
+// Wy艣wietl konkretn膮 rewizj臋
 if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
     $slug = $matches[1];
     $revisionId = (int)$matches[2];
@@ -148,7 +181,6 @@ if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
         exit;
     }
     
-    // Pobierz konkretną rewizję
     $db = Database::getInstance()->getConnection();
     $stmt = $db->prepare("
         SELECT r.*, u.username as author
@@ -170,7 +202,6 @@ if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
         exit;
     }
     
-    // Nadpisz zawartość strony rewizją
     $page['content'] = $revision['content'];
     $page['revision_comment'] = $revision['revision_comment'];
     $page['revision_date'] = $revision['created_at'];
@@ -182,14 +213,14 @@ if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
     exit;
 }
 
-// Przywróć rewizję (dla adminów)
+// Przywr贸膰 rewizj臋 (dla admin贸w)
 if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
     $slug = $matches[1];
     $revisionId = (int)$matches[2];
     
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
-        die('403 - Tylko admin może przywracać rewizje');
+        die('403 - Tylko admin mo偶e przywraca膰 rewizje');
     }
     
     $pageModel = new Page();
@@ -201,7 +232,6 @@ if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
         exit;
     }
     
-    // Pobierz starą rewizję
     $db = Database::getInstance()->getConnection();
     $stmt = $db->prepare("SELECT content FROM revisions WHERE revision_id = :revision_id AND page_id = :page_id");
     $stmt->execute([
@@ -216,7 +246,6 @@ if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
         die('404 - Rewizja nie znaleziona');
     }
     
-    // Stwórz nową rewizję z zawartością starej
     $stmt = $db->prepare("
         INSERT INTO revisions (page_id, content, author_id, revision_comment)
         VALUES (:page_id, :content, :author_id, :comment)
@@ -226,12 +255,11 @@ if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
         'page_id' => $page['page_id'],
         'content' => $oldRevision['content'],
         'author_id' => $_SESSION['user_id'],
-        'comment' => 'Przywrócono rewizję #' . $revisionId
+        'comment' => 'Przywr贸cono rewizj臋 #' . $revisionId
     ]);
     
     $newRevisionId = $db->lastInsertId();
     
-    // Ustaw jako aktualną
     $stmt = $db->prepare("UPDATE pages SET current_revision_id = :revision_id WHERE page_id = :page_id");
     $stmt->execute([
         'revision_id' => $newRevisionId,
@@ -242,7 +270,7 @@ if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
     exit;
 }
 
-// Historia strony - PRZED /page/{slug}/save!
+// Historia strony
 if (preg_match('#^/page/([a-z0-9-]+)/history$#', $uri, $matches)) {
     $slug = $matches[1];
     $pageModel = new Page();
@@ -254,7 +282,6 @@ if (preg_match('#^/page/([a-z0-9-]+)/history$#', $uri, $matches)) {
         exit;
     }
     
-    // Pobierz wszystkie rewizje
     $db = Database::getInstance()->getConnection();
     $stmt = $db->prepare("
         SELECT r.*, u.username as author
@@ -270,9 +297,7 @@ if (preg_match('#^/page/([a-z0-9-]+)/history$#', $uri, $matches)) {
     exit;
 }
 
-
-
-// Zapisz stronę - PRZED /page/{slug}!
+// Zapisz stron臋
 if (preg_match('#^/page/([a-z0-9-]+)/save$#', $uri, $matches) && $method === 'POST') {
     $slug = $matches[1];
     
@@ -287,7 +312,7 @@ if (preg_match('#^/page/([a-z0-9-]+)/save$#', $uri, $matches) && $method === 'PO
     exit;
 }
 
-// Edytuj stronę - PRZED /page/{slug}!
+// Edytuj stron臋
 if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
     $slug = $matches[1];
     
@@ -299,7 +324,6 @@ if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
     $pageModel = new Page();
     $page = $pageModel->findBySlug($slug);
     
-    // Jeśli strona nie istnieje, pozwól ją stworzyć
     if (!$page) {
         $page = [
             'slug' => $slug,
@@ -313,23 +337,7 @@ if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
     exit;
 }
 
-// Wyświetl stronę - MUSI BYĆ NA KOŃCU!
-if (preg_match('#^/page/([a-z0-9-]+)$#', $uri, $matches)) {
-    $slug = $matches[1];
-    $pageModel = new Page();
-    $page = $pageModel->findBySlug($slug);
-    
-    if (!$page) {
-        http_response_code(404);
-        require __DIR__ . '/../views/404.php';
-        exit;
-    }
-    
-    require __DIR__ . '/../views/pages/view.php';
-    exit;
-}
-
-// Upload obrazków
+// Upload obrazk贸w
 if ($uri === '/api/upload' && $method === 'POST') {
     header('Content-Type: application/json');
     
@@ -346,7 +354,7 @@ if ($uri === '/api/upload' && $method === 'POST') {
     exit;
 }
 
-// Galeria obrazków
+// Galeria obrazk贸w
 if ($uri === '/media') {
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login');
@@ -370,12 +378,11 @@ if ($uri === '/media') {
 if ($uri === '/admin') {
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
-        die('<h1 style="color:#ff0000;">403 - Brak dostępu</h1><p>Tylko administratorzy mają dostęp do tego panelu.</p>');
+        die('<h1 style="color:#ff0000;">403 - Brak dost臋pu</h1><p>Tylko administratorzy maj膮 dost臋p do tego panelu.</p>');
     }
     
     $db = Database::getInstance()->getConnection();
     
-    // Statystyki
     $stats = [
         'pages' => $db->query("SELECT COUNT(*) FROM pages")->fetchColumn(),
         'users' => $db->query("SELECT COUNT(*) FROM users")->fetchColumn(),
@@ -396,13 +403,27 @@ if ($uri === '/admin/users') {
     
     $db = Database::getInstance()->getConnection();
     $users = $db->query("
-        SELECT u.*, 
-               COUNT(DISTINCT p.page_id) as pages_created,
-               COUNT(DISTINCT r.revision_id) as total_edits
+        SELECT 
+            u.*,
+            COALESCE(p.pages_created, 0)   AS pages_created,
+            COALESCE(r.total_edits, 0)     AS total_edits,
+            COALESCE(c.total_comments, 0)  AS total_comments
         FROM users u
-        LEFT JOIN pages p ON u.user_id = p.created_by
-        LEFT JOIN revisions r ON u.user_id = r.author_id
-        GROUP BY u.user_id
+        LEFT JOIN (
+            SELECT created_by AS user_id, COUNT(*) AS pages_created
+            FROM pages
+            GROUP BY created_by
+        ) p ON u.user_id = p.user_id
+        LEFT JOIN (
+            SELECT author_id AS user_id, COUNT(*) AS total_edits
+            FROM revisions
+            GROUP BY author_id
+        ) r ON u.user_id = r.user_id
+        LEFT JOIN (
+            SELECT user_id, COUNT(*) AS total_comments
+            FROM comments
+            GROUP BY user_id
+        ) c ON u.user_id = c.user_id
         ORDER BY u.created_at DESC
     ")->fetchAll();
     
@@ -410,7 +431,8 @@ if ($uri === '/admin/users') {
     exit;
 }
 
-// Admin - Dodaj użytkownika
+
+// Admin - Dodaj u偶ytkownika
 if ($uri === '/admin/users/add' && $method === 'POST') {
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
@@ -450,6 +472,8 @@ if ($uri === '/admin/users/add' && $method === 'POST') {
     exit;
 }
 
+
+
 // Admin - Usuń użytkownika
 if (preg_match('#^/admin/users/delete/(\d+)$#', $uri, $matches)) {
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -459,19 +483,34 @@ if (preg_match('#^/admin/users/delete/(\d+)$#', $uri, $matches)) {
     
     $userId = (int)$matches[1];
     
-    // Nie pozwól usunąć samego siebie
+    // Nie można usunąć samego siebie
     if ($userId === $_SESSION['user_id']) {
         header('Location: /admin/users?error=self');
         exit;
     }
     
     $db = Database::getInstance()->getConnection();
+    
+    // Usuń komentarze użytkownika
+    $stmt = $db->prepare("DELETE FROM comments WHERE user_id = :user_id");
+    $stmt->execute(['user_id' => $userId]);
+    
+    // Usuń rewizje użytkownika
+    $stmt = $db->prepare("DELETE FROM revisions WHERE author_id = :user_id");
+    $stmt->execute(['user_id' => $userId]);
+    
+    // Usuń strony użytkownika
+    $stmt = $db->prepare("DELETE FROM pages WHERE created_by = :user_id");
+    $stmt->execute(['user_id' => $userId]);
+    
+    // Usuń użytkownika
     $stmt = $db->prepare("DELETE FROM users WHERE user_id = :user_id");
     $stmt->execute(['user_id' => $userId]);
     
     header('Location: /admin/users?success=deleted');
     exit;
 }
+
 
 // Admin - Kategorie
 if ($uri === '/admin/categories') {
@@ -496,7 +535,7 @@ if ($uri === '/admin/categories') {
     exit;
 }
 
-// Admin - Dodaj kategorię
+// Admin - Dodaj kategori臋
 if ($uri === '/admin/categories/add' && $method === 'POST') {
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
@@ -540,7 +579,6 @@ if ($uri === '/admin/customization') {
     
     $db = Database::getInstance()->getConnection();
     
-    // Pobierz obecne customizacje
     $customCSS = $db->query("SELECT content FROM customizations WHERE type = 'css' AND is_active = 1 ORDER BY custom_id DESC LIMIT 1")->fetchColumn();
     $customJS = $db->query("SELECT content FROM customizations WHERE type = 'js' AND is_active = 1 ORDER BY custom_id DESC LIMIT 1")->fetchColumn();
     
@@ -548,7 +586,7 @@ if ($uri === '/admin/customization') {
     exit;
 }
 
-// Admin - Zapisz customizację
+// Admin - Zapisz customizacj臋 CSS/JS
 if ($uri === '/admin/customization/save' && $method === 'POST') {
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
@@ -565,10 +603,8 @@ if ($uri === '/admin/customization/save' && $method === 'POST') {
     
     $db = Database::getInstance()->getConnection();
     
-    // Dezaktywuj stare
     $db->prepare("UPDATE customizations SET is_active = 0 WHERE type = :type")->execute(['type' => $type]);
     
-    // Dodaj nowe
     $stmt = $db->prepare("
         INSERT INTO customizations (type, name, content, is_active)
         VALUES (:type, :name, :content, 1)
@@ -590,7 +626,6 @@ if (preg_match('#^/category/(\d+)$#', $uri, $matches)) {
     
     $db = Database::getInstance()->getConnection();
     
-    // Pobierz kategorię
     $stmt = $db->prepare("SELECT * FROM categories WHERE category_id = :id");
     $stmt->execute(['id' => $categoryId]);
     $category = $stmt->fetch();
@@ -601,7 +636,6 @@ if (preg_match('#^/category/(\d+)$#', $uri, $matches)) {
         exit;
     }
     
-    // Pobierz strony w kategorii
     $stmt = $db->prepare("
         SELECT p.*, u.username as author
         FROM pages p
@@ -632,8 +666,149 @@ if ($uri === '/categories') {
     exit;
 }
 
+// Pomoc sk艂adni
+if ($uri === '/syntax-help') {
+    require __DIR__ . '/../views/syntax-help.php';
+    exit;
+}
+
+// === KOMENTARZE ===
+
+// Dodaj komentarz
+if ($uri === '/comment/add' && $method === 'POST') {
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Musisz by膰 zalogowany']);
+        exit;
+    }
+    
+    $pageId = (int)($_POST['page_id'] ?? 0);
+    $content = trim($_POST['content'] ?? '');
+    $parentId = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
+    
+    if (empty($content)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Tre艣膰 komentarza nie mo偶e by膰 pusta']);
+        exit;
+    }
+    
+    $commentModel = new Comment();
+    if ($commentModel->create($pageId, $_SESSION['user_id'], $content, $parentId)) {
+        echo json_encode(['success' => true]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'B艂膮d dodawania komentarza']);
+    }
+    exit;
+}
+
+// Usu艅 komentarz
+if (preg_match('#^/comment/(\d+)/delete$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Brak autoryzacji']);
+        exit;
+    }
+    
+    $commentId = (int)$matches[1];
+    $commentModel = new Comment();
+    
+    if ($commentModel->delete($commentId, $_SESSION['user_id'])) {
+        echo json_encode(['success' => true]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'B艂膮d usuwania komentarza']);
+    }
+    exit;
+}
+
+// === ANALYTICS DASHBOARD ===
+if ($uri === '/analytics') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        header('Location: /login');
+        exit;
+    }
+    
+    require_once __DIR__ . '/../models/Analytics.php';
+    $analytics = new Analytics();
+    
+    require __DIR__ . '/../views/analytics/dashboard.php';
+    exit;
+}
+
+// API endpoint dla wykres贸w (JSON)
+if ($uri === '/api/analytics/views') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        http_response_code(401);
+        exit;
+    }
+    
+    require_once __DIR__ . '/../models/Analytics.php';
+    $analytics = new Analytics();
+    
+    $days = isset($_GET['days']) ? (int)$_GET['days'] : 30;
+    $data = $analytics->getViewsLastDays($days);
+    
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
+// === PANEL CUSTOMIZACJI ===
+if ($uri === '/admin/customize') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        header('Location: /login');
+        exit;
+    }
+    
+    require_once __DIR__ . '/../models/Settings.php';
+    $settings = new Settings();
+    
+    require __DIR__ . '/../views/admin/customize.php';
+    exit;
+}
+
+// Zapisz ustawienia
+if ($uri === '/admin/customize/save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        http_response_code(401);
+        exit;
+    }
+    
+    require_once __DIR__ . '/../controllers/AdminController.php';
+    $controller = new AdminController();
+    $controller->saveCustomize();
+    exit;
+}
 
 
-// 404
+
+
+// Wy艣wietl stron臋 - MUSI BY膯 NA KO艃CU!
+if (preg_match('#^/page/([a-z0-9-]+)$#', $uri, $matches)) {
+    $slug = $matches[1];
+    $pageModel = new Page();
+    $page = $pageModel->findBySlug($slug);
+    
+    if (!$page) {
+        http_response_code(404);
+        require __DIR__ . '/../views/404.php';
+        exit;
+    }
+    
+    // Track page view z Analytics
+    require_once __DIR__ . '/../models/Analytics.php';
+    $analytics = new Analytics();
+    $analytics->trackPageView($page['page_id'], $_SESSION['user_id'] ?? null);
+    
+    // Pobierz zaktualizowane views
+    $page = $pageModel->findBySlug($slug);
+    
+    require __DIR__ . '/../views/pages/view.php';
+    exit;
+}
+
+
+// 404 - Strona nie znaleziona
 http_response_code(404);
 require __DIR__ . '/../views/404.php';
