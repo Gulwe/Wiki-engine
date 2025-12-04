@@ -4,8 +4,93 @@
     box-sizing: border-box;
 }
 
+/* === THEME SYSTEM === */
+:root {
+    /* Default / Light theme */
+    --bg-primary: #0a0015;
+    --bg-secondary: #1a0033;
+    --text-primary: #e0e0ff;
+    --text-secondary: #c4b5fd;
+    --accent-primary: #8b5cf6;
+    --accent-secondary: #3b82f6;
+    --border-color: rgba(139, 92, 246, 0.2);
+    --card-bg: rgba(20, 0, 40, 0.6);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    --bg-primary: #0d0d0d;
+    --bg-secondary: #1a1a1a;
+    --text-primary: #f0f0f0;
+    --text-secondary: #b0b0b0;
+    --accent-primary: #6d28d9;
+    --accent-secondary: #2563eb;
+    --border-color: rgba(109, 40, 217, 0.3);
+    --card-bg: rgba(26, 26, 26, 0.8);
+}
+
+/* Purple theme */
+[data-theme="purple"] {
+    --bg-primary: #1a0033;
+    --bg-secondary: #2d0052;
+    --text-primary: #f3e5ff;
+    --text-secondary: #d8b4fe;
+    --accent-primary: #a855f7;
+    --accent-secondary: #7c3aed;
+    --border-color: rgba(168, 85, 247, 0.4);
+    --card-bg: rgba(45, 0, 82, 0.7);
+}
+
+/* Aplikuj zmienne do głównych elementów */
 body {
-    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary);
+}
+
+.theme-selector {
+    background: rgba(30, 0, 60, 0.6);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.theme-selector:hover {
+    border-color: var(--accent-primary);
+}
+
+.theme-selector:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+}
+
+
+.container, .admin-section, .page-list li {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.btn, .nav-links a {
+    color: var(--text-secondary);
+    border-color: var(--accent-primary);
+}
+
+.btn:hover {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+}
+
+h1, h2, h3 {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+
+body {
+    font-family: 'Russo One', 'Segoe UI', 'Helvetica Neue', sans-serif;
     background: linear-gradient(135deg, #0a0015 0%, #1a0033 100%);
     color: #e0e0ff;
     line-height: 1.7;
@@ -24,6 +109,14 @@ body::before {
         radial-gradient(circle at 80% 80%, rgba(0, 150, 255, 0.1) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
+}
+
+.wiki-symbol {
+    display: inline-block;
+    height: auto;
+    width: auto; 
+    vertical-align: text-bottom;
+    margin: 0 2px;
 }
 
 header {
@@ -130,7 +223,19 @@ nav {
 .modern-header .logo img {
     height: 40px;
     width: auto;
+    vertical-align: middle;
     object-fit: contain;
+    margin-right: 8px;
+    animation: rotate-clockwise 10s linear infinite;
+}
+
+@keyframes rotate-clockwise {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .logo-wrapper {
@@ -139,9 +244,6 @@ nav {
     gap: 10px;
 }
 
-.logo-icon {
-    font-size: 28px;
-}
 
 .logo-text {
     display: flex;
@@ -3015,11 +3117,9 @@ input:checked + .toggle-slider:before {
     transform: scale(1.03);
 }
 
-.modern-header .logo img {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
-}
+
+
+
 
 .logo-wrapper {
     display: flex;
@@ -3027,9 +3127,6 @@ input:checked + .toggle-slider:before {
     gap: 10px;
 }
 
-.logo-icon {
-    font-size: 28px;
-}
 
 .logo-text {
     display: flex;
@@ -3063,6 +3160,7 @@ input:checked + .toggle-slider:before {
     font-size: 16px;
     pointer-events: none;
 }
+
 
 
 /* używa #search-input ze starego pliku – nie ruszamy istniejącej definicji */
@@ -3106,6 +3204,16 @@ input:checked + .toggle-slider:before {
     color: #fff;
     box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
 }
+
+.wiki-flag {
+    display: inline-block;
+    height: 1em;
+    width: auto;
+    vertical-align: text-bottom;
+    margin-right: 4px;
+}
+
+
 
 /* Dropdowny */
 .nav-dropdown {

@@ -1,0 +1,100 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* === THEME VARIABLES === */
+:root {
+    /* Default (AM) – Twój obecny fioletowo-niebieski styl */
+    --bg-primary: #0a0015;
+    --bg-secondary: #1a0033;
+    --bg-tertiary: #2a0050;
+
+    --text-primary: #e0e0ff;
+    --text-secondary: #c4b5fd;
+    --text-muted: #9ca3af;
+
+    --accent-primary: #8b5cf6;
+    --accent-secondary: #3b82f6;
+    --accent-hover: #a78bfa;
+
+    --border-color: rgba(139, 92, 246, 0.2);
+    --card-bg: rgba(20, 0, 40, 0.6);
+    --header-bg: #140028;
+    --input-bg: rgba(30, 0, 60, 0.5);
+    --input-border: rgba(139, 92, 246, 0.3);
+
+    --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+    --success-bg: rgba(74, 222, 128, 0.1);
+    --success-border: #4ade80;
+    --success-text: #86efac;
+
+    --error-bg: rgba(239, 68, 68, 0.1);
+    --error-border: #ef4444;
+    --error-text: #fca5a5;
+
+    --warning-bg: rgba(251, 191, 36, 0.1);
+    --warning-border: #fbbf24;
+    --warning-text: #fcd34d;
+
+    --info-bg: rgba(59, 130, 246, 0.1);
+    --info-border: #3b82f6;
+    --info-text: #93c5fd;
+}
+
+/* Body */
+body {
+    font-family: 'Russo One', 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary);
+    line-height: 1.7;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 150, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Typography */
+h1, h2, h3 {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 25px;
+    font-weight: 800;
+}
+
+h1 { font-size: 42px; letter-spacing: -1px; }
+h2 { font-size: 32px; }
+h3 { font-size: 24px; }
+
+a {
+    color: var(--accent-secondary);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+a:hover {
+    color: var(--accent-hover);
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%) !important;
+}

@@ -1,0 +1,57 @@
+/* Jasny, niebiesko–zielony motyw */
+[data-theme="light"] {
+    /* T³a */
+    --bg-primary: #005035;
+    --bg-secondary: #0a6b52;
+    --bg-tertiary: #0f7f63;
+    
+    /* Teksty */
+    --text-primary: #e3f2fd;
+    --text-secondary: #bbdefb;
+    --text-muted: #90caf9;
+    
+    /* Akcenty - niebieski */
+    --accent-primary: #2196f3;
+    --accent-secondary: #1e88e5;
+    --accent-hover: #42a5f5;
+    
+    /* Elementy UI */
+    --border-color: rgba(33, 150, 243, 0.3);
+    --card-bg: #003d41;
+    --header-bg: #004d40;
+    --input-bg: rgba(0, 77, 64, 0.9);
+    --input-border: rgba(33, 150, 243, 0.4);
+    
+    /* Cienie */
+    --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.16);
+    
+    /* Statusy */
+    --success-bg: rgba(76, 175, 80, 0.08);
+    --success-border: #4caf50;
+    --success-text: #2e7d32;
+    
+    --error-bg: rgba(244, 67, 54, 0.08);
+    --error-border: #f44336;
+    --error-text: #c62828;
+    
+    --warning-bg: rgba(255, 152, 0, 0.08);
+    --warning-border: #ff9800;
+    --warning-text: #e65100;
+    
+    --info-bg: rgba(3, 169, 244, 0.08);
+    --info-border: #03a9f4;
+    --info-text: #01579b;
+}
+
+/* Poœwiata + stopka */
+[data-theme="light"] body::before {
+    background:
+        radial-gradient(circle at 20% 50%, rgba(33, 150, 243, 0.12) 0%, transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(0, 150, 136, 0.12) 0%, transparent 55%);
+}
+
+[data-theme="light"] footer {
+    background: rgba(0, 61, 65, 0.95);
+}

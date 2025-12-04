@@ -306,6 +306,8 @@ private function parseYouTube(string $content): string {
         $content = $this->parseSections($content);
         $content = $this->parseTables($content);
         $content = $this->parseImages($content);
+        $content = $this->parseFlags($content);
+        $content = $this->parseSymbols($content);
         $content = $this->parseYouTube($content);
 
         // 3. Inline
@@ -519,6 +521,46 @@ private function parseTables(string $content): string {
 
         return $content;
     }
+
+// === SYMBOLE ===
+private function parseSymbols(string $content): string {
+    // {{symbol:iconName|Alt text}}
+    $pattern = '/\{\{symbol:([a-zA-Z0-9_-]+)(?:\|([^}]*))?\}\}/';
+
+    return preg_replace_callback($pattern, function ($m) {
+        $iconName = trim($m[1]);
+        $label = isset($m[2]) && trim($m[2]) !== '' ? trim($m[2]) : ucfirst($iconName);
+
+        // Sprawdź rozszerzenie - .png, .svg, .jpg
+        $src = "/symbols/{$iconName}.png";
+
+        return '<img class="wiki-symbol" src="' . htmlspecialchars($src) . '" 
+                     alt="' . htmlspecialchars($label) . '" 
+                     title="' . htmlspecialchars($label) . '">';
+    }, $content);
+}
+
+
+// === FLAGI ===
+private function parseFlags(string $content): string {
+    $pattern = '/\{\{flag:([A-Za-z]{2})(?:\|([^}]*))?\}\}/';
+
+    return preg_replace_callback($pattern, function ($m) {
+        $code = strtoupper($m[1]);
+        $codeLC = strtolower($code);
+        $label = isset($m[2]) && trim($m[2]) !== '' ? trim($m[2]) : $code;
+
+        $src = "https://flagcdn.com/w40/{$codeLC}.png";
+
+        // $src = "/flags/{$codeLC}.svg";
+
+        return '<img class="wiki-flag" src="' . htmlspecialchars($src) . '" 
+                     alt="' . htmlspecialchars($label) . '" 
+                     title="' . htmlspecialchars($label) . '">';
+    }, $content);
+}
+
+
 
 // === OBRAZKI ===
 private function parseImages(string $content): string {
