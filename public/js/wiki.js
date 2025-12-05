@@ -1,28 +1,6 @@
 // public/js/wiki.js
 
 $(document).ready(function() {
-    // Live search - wyszukiwanie w czasie rzeczywistym
-    $('#search-input').on('keyup', function() {
-        const query = $(this).val();
-        
-        if (query.length < 3) {
-            $('#search-results').hide();
-            return;
-        }
-        
-        $.ajax({
-            type: 'GET',
-            url: '/api/search.php',
-            data: { q: query },
-            dataType: 'json',
-            success: function(data) {
-                displaySearchResults(data);
-            },
-            error: function(xhr, status, error) {
-                console.error('Search error:', error);
-            }
-        });
-    });
     
     // Auto-save drafts co 30 sekund
     let autoSaveTimer;
@@ -35,6 +13,8 @@ $(document).ready(function() {
         const content = $('#page-editor').val();
         const pageId = $('#page-id').val();
         
+        if (!pageId || !content) return;
+        
         $.ajax({
             type: 'POST',
             url: '/api/pages.php',
@@ -44,19 +24,39 @@ $(document).ready(function() {
                 content: content
             },
             success: function(response) {
-                showNotification('Draft saved', 'success');
+                showNotification('Szkic zapisany', 'success');
+            },
+            error: function() {
+                console.error('B³¹d zapisu szkicu');
             }
         });
     }
     
     // Upload obrazków z drag & drop
-    $('#image-upload-zone').on('drop', function(e) {
-        e.preventDefault();
-        const files = e.originalEvent.dataTransfer.files;
-        uploadImages(files);
-    });
+    const uploadZone = $('#image-upload-zone');
+    
+    if (uploadZone.length) {
+        uploadZone.on('dragover', function(e) {
+            e.preventDefault();
+            $(this).addClass('dragover');
+        });
+        
+        uploadZone.on('dragleave', function(e) {
+            e.preventDefault();
+            $(this).removeClass('dragover');
+        });
+        
+        uploadZone.on('drop', function(e) {
+            e.preventDefault();
+            $(this).removeClass('dragover');
+            const files = e.originalEvent.dataTransfer.files;
+            uploadImages(files);
+        });
+    }
     
     function uploadImages(files) {
+        if (!files || files.length === 0) return;
+        
         const formData = new FormData();
         
         for (let i = 0; i < files.length; i++) {
@@ -70,14 +70,38 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                insertImageLinks(response.urls);
+                if (response.urls && Array.isArray(response.urls)) {
+                    insertImageLinks(response.urls);
+                    showNotification('Obrazki za³adowane', 'success');
+                }
+            },
+            error: function() {
+                showNotification('B³¹d wgrywania obrazków', 'error');
             }
         });
+    }
+    
+    function insertImageLinks(urls) {
+        const editor = $('#page-editor');
+        if (!editor.length) return;
+        
+        let markdown = '';
+        urls.forEach(function(url) {
+            markdown += '{{image|' + url + '}}\n';
+        });
+        
+        const currentContent = editor.val();
+        editor.val(currentContent + '\n' + markdown);
     }
     
     // Preview zmian przed zapisaniem
     $('#preview-btn').on('click', function() {
         const content = $('#page-editor').val();
+        
+        if (!content) {
+            showNotification('Brak treœci do podgl¹du', 'warning');
+            return;
+        }
         
         $.ajax({
             type: 'POST',
@@ -88,49 +112,44 @@ $(document).ready(function() {
             },
             success: function(html) {
                 $('#preview-container').html(html).show();
+            },
+            error: function() {
+                showNotification('B³¹d generowania podgl¹du', 'error');
             }
         });
     });
-});
-
-// Accordion z jQuery
-$(document).on('click', '.accordion-header', function() {
-    const item = $(this).closest('.accordion-item');
-    const content = item.find('.accordion-content');
-    const icon = item.find('.accordion-icon');
     
-    // Zamknij inne (opcjonalnie)
-    // $('.accordion-content').not(content).slideUp(300);
-    // $('.accordion-icon').not(icon).html('¡').css('transform', 'rotate(0)');
-    
-    // Toggle obecny
-    content.slideToggle(300);
-    
-    if (content.is(':visible')) {
-        icon.html('^').css('transform', 'rotate(180deg)');
-    } else {
-        icon.html('¡').css('transform', 'rotate(0)');
-    }
-});
-
-
-function displaySearchResults(results) {
-    const container = $('#search-results');
-    container.empty();
-    
-    if (results.length === 0) {
-        container.html('<p>No results found</p>');
-        return;
-    }
-    
-    results.forEach(function(page) {
-        container.append(
-            `<div class="search-result">
-                <a href="/page/${page.slug}">${page.title}</a>
-                <p>${page.excerpt}</p>
-            </div>`
-        );
+    // Accordion z jQuery
+    $(document).on('click', '.accordion-header', function() {
+        const item = $(this).closest('.accordion-item');
+        const content = item.find('.accordion-content');
+        const icon = item.find('.accordion-icon');
+        
+        // Toggle obecny
+        content.slideToggle(300);
+        
+        if (content.is(':visible')) {
+            icon.html('^').css('transform', 'rotate(0deg)');
+            item.addClass('active');
+        } else {
+            icon.html('¡').css('transform', 'rotate(0deg)');
+            item.removeClass('active');
+        }
     });
     
-    container.show();
-}
+    // Helper: wyœwietlanie powiadomieñ
+    function showNotification(message, type) {
+        type = type || 'info';
+        
+        const notification = $('<div>')
+            .addClass('notification notification-' + type)
+            .text(message)
+            .appendTo('body');
+        
+        setTimeout(function() {
+            notification.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+});

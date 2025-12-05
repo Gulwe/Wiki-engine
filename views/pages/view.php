@@ -114,7 +114,7 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
                     | 💬 <?= htmlspecialchars($page['revision_comment']) ?>
                 <?php endif; ?>
             <?php else: ?>
-                📝 Autor:
+                📝 Autor artykułu:
                 <?= htmlspecialchars($page['author'] ?? 'Nieznany') ?>
                 |
                 🕐 Ostatnia modyfikacja:

@@ -51,22 +51,22 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
 
         <!-- Search Box -->
         <div class="search-box">
-            <span class="search-icon">🔍</span>
+            <span class="search-icon"></span>
             <input type="text" id="search-input" placeholder="Szukaj w Wiki..." autocomplete="off">
             <div id="search-results"></div>
         </div>
 
         <!-- Navigation -->
         <nav class="main-nav">
-            <a href="/" class="nav-item">
+<!--            <a href="/" class="nav-item">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-text">Strona główna</span>
-            </a>
+            </a> -->
 
-            <a href="/categories" class="nav-item">
+        <!--    <a href="/categories" class="nav-item">
                 <span class="nav-icon">📁</span>
                 <span class="nav-text">Kategorie</span>
-            </a>
+            </a> -->
 
             <?php if (isset($_SESSION['user_id'])): ?>
                 <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
@@ -83,8 +83,14 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
                         <span class="nav-text">Więcej</span>
                         <span class="dropdown-arrow">▼</span>
                     </button>
+                    
+
 
                     <div class="dropdown-menu">
+                 <a href="/categories" class="dropdown-item">
+                <span class="dropdown-icon">📁</span>
+                Kategorie
+            </a>
                         <a href="/media" class="dropdown-item">
                             <span class="dropdown-icon">🖼️</span>
                             Galeria

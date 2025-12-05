@@ -106,7 +106,7 @@ if ($uri === '/logout') {
 
 // API: Wyszukiwanie
 if ($uri === '/api/search' && $method === 'GET') {
-    header('Content-Type: application/json');
+    header('Content-Type: application/json; charset=utf-8');
     
     $query = $_GET['q'] ?? '';
     
@@ -117,28 +117,53 @@ if ($uri === '/api/search' && $method === 'GET') {
     
     try {
         $db = Database::getInstance()->getConnection();
-        
         $searchTerm = '%' . $query . '%';
         
         $stmt = $db->prepare("
-            SELECT p.page_id, p.slug, p.title,
-                   SUBSTRING(COALESCE(r.content, ''), 1, 150) as excerpt
+            SELECT 
+                p.page_id,
+                p.slug,
+                p.title,
+                SUBSTRING(COALESCE(r.content, ''), 1, 150) AS excerpt,
+                c.name AS category
             FROM pages p
-            LEFT JOIN revisions r ON p.current_revision_id = r.revision_id
-            WHERE CONCAT(p.title, ' ', COALESCE(r.content, '')) LIKE ?
+            LEFT JOIN revisions r       ON p.current_revision_id = r.revision_id
+            LEFT JOIN page_categories pc ON pc.page_id = p.page_id
+            LEFT JOIN categories c       ON c.category_id = pc.category_id
+            WHERE 
+                CONCAT(p.title, ' ', COALESCE(r.content, ''), ' ', COALESCE(c.name, '')) LIKE ?
+            GROUP BY 
+                p.page_id, p.slug, p.title, excerpt, category
             LIMIT 10
         ");
         
         $stmt->execute([$searchTerm]);
-        $results = $stmt->fetchAll();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        echo json_encode($results);
+        $results = [];
+        foreach ($rows as $row) {
+            $category = isset($row['category']) ? trim($row['category']) : '';
+            if ($category === '') {
+                $category = 'Bez kategorii';
+            }
+            
+            $results[] = [
+                'page_id'  => $row['page_id'],
+                'slug'     => $row['slug'],
+                'title'    => $row['title'],
+                'excerpt'  => $row['excerpt'],
+                'category' => $category,
+            ];
+        }
+        
+        echo json_encode($results, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
     }
     exit;
 }
+
 
 // API: Podgl膮d
 if ($uri === '/api/preview' && $method === 'POST') {
@@ -621,35 +646,148 @@ if ($uri === '/admin/customization/save' && $method === 'POST') {
 }
 
 // Kategoria - lista stron
-if (preg_match('#^/category/(\d+)$#', $uri, $matches)) {
+// Kategoria - lista stron
+if (preg_match('~^/category/(\d+)$~', $uri, $matches)) {
     $categoryId = (int)$matches[1];
-    
+
     $db = Database::getInstance()->getConnection();
-    
-    $stmt = $db->prepare("SELECT * FROM categories WHERE category_id = :id");
+
+    // Pobierz kategorię
+    $stmt = $db->prepare("
+        SELECT *
+        FROM categories
+        WHERE category_id = :id
+    ");
     $stmt->execute(['id' => $categoryId]);
-    $category = $stmt->fetch();
-    
+    $category = $stmt->fetch(PDO::FETCH_ASSOC);
+
     if (!$category) {
         http_response_code(404);
         require __DIR__ . '/../views/404.php';
         exit;
     }
-    
+
+    // Pobierz strony w kategorii z treścią bieżącej rewizji
     $stmt = $db->prepare("
-        SELECT p.*, u.username as author
+        SELECT 
+            p.page_id,
+            p.slug,
+            p.title,
+            p.created_by,
+            p.updated_at,
+            u.username AS author,
+            r.content
         FROM pages p
         JOIN page_categories pc ON p.page_id = pc.page_id
-        LEFT JOIN users u ON p.created_by = u.user_id
+        JOIN revisions r        ON p.current_revision_id = r.revision_id
+        LEFT JOIN users u       ON p.created_by = u.user_id
         WHERE pc.category_id = :category_id
         ORDER BY p.title ASC
     ");
     $stmt->execute(['category_id' => $categoryId]);
-    $pages = $stmt->fetchAll();
-    
+    $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // --- Parser meta (opis + flagi + symbole kampanii) ---
+    foreach ($pages as &$p) {
+        $content = $p['content'] ?? '';
+
+        // OPIS MODA z sekcji "### Opis moda"
+        $p['mod_description'] = '';
+
+        if (preg_match('/^###\s*Opis moda\s*\R(.+?)(?:\R#{1,6}\s|\Z)/usm', $content, $m)) {
+            $text = trim($m[1]);
+
+            // wywal szablony, linki wiki, markdown
+            $text = preg_replace('/\{\{.*?\}\}/s', '', $text);        // {{ ... }}
+            $text = preg_replace('/\[\[(.*?)\]\]/', '$1', $text);     // [[Link]]
+            $text = preg_replace('/\*\*(.*?)\*\*/', '$1', $text);     // **bold**
+            $text = preg_replace('/\*(.*?)\*/', '$1', $text);         // *italic*
+            $text = strip_tags($text);
+            $text = trim($text);
+
+            if ($text !== '') {
+                if (mb_strlen($text) > 220) {
+                    $text = mb_substr($text, 0, 220) . '…';
+                }
+                $p['mod_description'] = $text;
+            }
+        }
+
+        // FLAGI {{flag:PL}} / {{flag:PL|Polski}}
+        $langs = [];
+        if (preg_match_all('/\{\{\s*flag:([A-Za-z]{2})(?:\|([^}]*))?\}\}/i', $content, $m2, PREG_SET_ORDER)) {
+            foreach ($m2 as $match) {
+                $code  = strtoupper(trim($match[1]));
+                $label = isset($match[2]) && trim($match[2]) !== '' ? trim($match[2]) : $code;
+
+                if ($code !== '') {
+                    $langs[$code] = [
+                        'code'  => $code,
+                        'label' => $label,
+                    ];
+                }
+            }
+        }
+        $p['languages'] = array_values($langs); // [ [code, label], ... ]
+
+        // SYMBOLE KAMPANII {{symbol:am_small}} {{symbol:ru_small}}
+        // dopasuj ścieżkę src do tego, czego używa Twój parser symboli
+// --- SYMBOLE KAMPANII z wiersza "| Kampania || ..." ---
+$symbols = [];
+
+// znajdź wiersz tabeli zaczynający się od "| Kampania"
+if (preg_match('/^\|\s*Kampania\s*\|\|\s*(.+)$/mi', $content, $rowMatch)) {
+    $cell = trim($rowMatch[1]); // np. "{{symbol:am_small}} {{symbol:ru_small}}"
+
+    // teraz wyciągnij wszystkie {{symbol:...}} z tej komórki
+    if (preg_match_all('/\{\{\s*symbol:([^\}\r\n]+)\}\}/i', $cell, $m3, PREG_SET_ORDER)) {
+        foreach ($m3 as $match) {
+            $name = trim($match[1]);   // np. am_small
+            if ($name === '') {
+                continue;
+            }
+            $key = strtolower($name);
+            $src = "/symbols/{$key}.png"; // dopasuj do swojej ścieżki
+
+            $symbols[$key] = [
+                'name' => $name,
+                'src'  => $src,
+            ];
+        }
+    }
+}
+
+$p['campaign_symbols'] = array_values($symbols);
+
+    }
+    unset($p);
+
     require __DIR__ . '/../views/category.php';
     exit;
 }
+
+
+
+//Stronga glowna
+if ($uri === '/') {
+    $pageModel = new Page();
+    $pages = $pageModel->getAll(); // masz już
+
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->query("
+        SELECT c.category_id, c.name, c.description, COUNT(pc.page_id) AS pages_count
+        FROM categories c
+        LEFT JOIN page_categories pc ON c.category_id = pc.category_id
+        GROUP BY c.category_id
+        ORDER BY pages_count DESC, c.name ASC
+    ");
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    require __DIR__ . '/../views/home.php';
+    exit;
+}
+
+
 
 // Lista wszystkich kategorii
 if ($uri === '/categories') {
