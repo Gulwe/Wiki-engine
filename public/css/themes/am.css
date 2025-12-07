@@ -1,0 +1,51 @@
+/* STYL AM – jaœniejszy, bardziej niebieski */
+html[data-theme="am"] {
+    /* T³a */
+    --bg-page: #02061a;
+    --bg-surface: #020b24;
+    --bg-surface-alt: #031131;
+
+    /* Karty / boxy */
+    --card-bg: #061843;
+    --card-bg-soft: #0a2154;
+
+    /* Teksty – trochê jaœniejsze */
+    --text-primary: #5c7aff;
+    --text-secondary: #d7e3ff;
+    --text-muted: #a0aed5;
+
+    /* Akcent – Twój kolor + jaœniejsze warianty */
+    --accent-main: #5c7aff;
+    --accent-main-soft: #2344c5;
+    --accent-strong: #000f5a;
+
+    /* Obramowania – jaœniejsze niebieskie */
+    --border-subtle: #1b2b63;
+    --border-strong: #29407d;
+
+    /* Inputy */
+    --input-bg: #020b24;
+    --input-border: #1b2b63;
+    --input-border-focus: #001a8a;
+
+    /* Cienie – bardziej „niebieskie” ni¿ czarne */
+    --shadow-soft: 0 2px 8px rgba(15, 23, 65, 0.55);
+    --shadow-medium: 0 12px 32px rgba(15, 23, 65, 0.8);
+
+    /* Statusy – lekko podbite jasnoœci¹ */
+    --success-bg: #06301a;
+    --success-border: #22c55e;
+    --success-text: #c4f8d6;
+
+    --error-bg: #491017;
+    --error-border: #fb7171;
+    --error-text: #fed0cf;
+
+    --warning-bg: #47300c;
+    --warning-border: #facc15;
+    --warning-text: #fef4c4;
+
+    --info-bg: #041437;
+    --info-border: #3b82f6;
+    --info-text: #d0e2ff;
+}

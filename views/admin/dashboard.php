@@ -65,6 +65,11 @@
                     <span class="action-icon">🎨</span>
                     <span>Customizuj</span>
                 </a>
+                <a href="/admin/links" class="action-card">
+    <div class="action-icon">🔗</div>
+    <div>Zewnętrzne linki</div>
+</a>
+
             </div>
         </div>
         

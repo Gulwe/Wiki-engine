@@ -424,3 +424,243 @@ ol li::marker {
         margin: 20px auto;
     }
 }
+
+/* WIKI BOXY */
+
+.wiki-box {
+    margin: 22px 0;
+    padding: 16px 18px;
+    border-radius: 10px;
+    border-left: 3px solid var(--border-subtle);
+    background-color: var(--bg-surface-alt);
+}
+
+.wiki-box-title {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.wiki-box-content {
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.wiki-box-tip {
+    background-color: var(--card-bg-soft);
+    border-left-color: var(--accent-main);
+    color: var(--text-secondary);
+}
+
+/* DIVIDER WIKI */
+
+.wiki-divider {
+    border: none;
+    height: 1px;
+    margin: 24px 0;
+    background-color: var(--border-subtle);
+}
+
+/* BREADCRUMBS WIKI */
+
+.breadcrumbs {
+    padding: 10px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.breadcrumbs a {
+    color: var(--accent-main);
+}
+
+.breadcrumbs a:hover {
+    color: var(--accent-main-soft);
+}
+
+.breadcrumbs .separator {
+    margin: 0 6px;
+    color: var(--text-muted);
+}
+
+.breadcrumbs .current {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* RELATED PAGES WIKI */
+
+.related-pages {
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.related-title {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.related-card {
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
+    padding: 12px 14px;
+    text-decoration: none;
+    display: block;
+}
+
+.related-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* KOMENTARZE WIKI */
+
+.comments-section {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.comments-section h3 {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.comment-form {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.comment-form h4 {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-surface-alt);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 90px;
+}
+
+.comment-form textarea:focus {
+    outline: none;
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 1px var(--input-border-focus);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.comments-list {
+    margin-top: 20px;
+}
+
+.no-comments {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 18px;
+}
+
+/* META / PAGE STRUCTURE WIKI */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.page-content {
+    margin-top: 10px;
+}
+
+.page-meta {
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* KATEGORIE WIKI */
+
+.page-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-surface-alt);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* SIDEBAR DROBNIEJSZE DODATKI */
+
+.sidebar-title {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.sidebar-content {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.sidebar-right {
+    float: right;
+    margin-left: 18px;
+}
+
+.sidebar-text-center {
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}

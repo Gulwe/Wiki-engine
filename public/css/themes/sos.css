@@ -1,0 +1,48 @@
+:root {
+    --bg-primary: #010b10;
+    --bg-secondary: #02141d;
+    --bg-tertiary: #03212c;
+    --bg-surface: #03212c;
+
+    --text-primary: #96efff;
+    --text-secondary: #c4ecf4;
+    --text-muted: #8fa7b2;
+
+    --accent-primary: #024f63;
+    --accent-secondary: #0390a8;
+    --accent-hover: #04a4bf;
+
+    /* bordery */
+    --border-subtle: #234763;
+    --border-strong: #315a7a;
+    --border-color: var(--border-subtle);
+
+    /* karty / header / inputy – BEZ alpha */
+    --card-bg: #031521;          /* ciemny cyjanowy panel */
+    --card-bg-soft: #052132;     /* delikatnie jaśniejsze */
+    --header-bg: #020f19;
+    --input-bg: #020e17;
+    --input-border: #25657d;
+
+    /* cienie */
+    --shadow-sm: 0 4px 15px rgba(0, 20, 28, 0.4);
+    --shadow-md: 0 8px 30px rgba(0, 20, 28, 0.55);
+    --shadow-lg: 0 20px 60px rgba(0, 20, 28, 0.7);
+
+    /* statusy – możesz zostawić delikatnie przezroczyste */
+    --success-bg: rgba(34, 197, 94, 0.08);
+    --success-border: #22c55e;
+    --success-text: #86efac;
+
+    --error-bg: rgba(239, 68, 68, 0.08);
+    --error-border: #ef4444;
+    --error-text: #fca5a5;
+
+    --warning-bg: rgba(250, 204, 21, 0.08);
+    --warning-border: #facc15;
+    --warning-text: #fcd34d;
+
+    --info-bg: rgba(3, 105, 161, 0.08);
+    --info-border: #0ea5e9;
+    --info-text: #7dd3fc;
+}

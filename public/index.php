@@ -71,13 +71,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // === ROUTING (KOLEJNO艢膯 MA ZNACZENIE!) ===
 
-// Strona g艂贸wna
-if ($uri === '/' || $uri === '') {
-    $pageModel = new Page();
-    $pages = $pageModel->getAll();
-    require __DIR__ . '/../views/home.php';
-    exit;
-}
+
 
 // === DIAGNOSTIC (DODAJ TO) ===
 if ($uri === '/diagnostic') {
@@ -768,12 +762,16 @@ $p['campaign_symbols'] = array_values($symbols);
 
 
 
-//Stronga glowna
-if ($uri === '/') {
+// Strona główna
+if ($uri === '/' || $uri === '') {
     $pageModel = new Page();
-    $pages = $pageModel->getAll(); // masz już
+    $pages = $pageModel->getRecent(5);
 
     $db = Database::getInstance()->getConnection();
+
+    // liczba wszystkich stron
+    $totalPagesCount = (int)$db->query("SELECT COUNT(*) FROM pages")->fetchColumn();
+
     $stmt = $db->query("
         SELECT c.category_id, c.name, c.description, COUNT(pc.page_id) AS pages_count
         FROM categories c
@@ -782,10 +780,112 @@ if ($uri === '/') {
         ORDER BY pages_count DESC, c.name ASC
     ");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+    
     require __DIR__ . '/../views/home.php';
     exit;
 }
+
+
+
+
+
+// ====== EXTERNAL LINKS - ADMIN ======
+
+// Admin - External Links
+if ($uri == '/admin/links') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+        http_response_code(403);
+        die('403 - Brak dostępu');
+    }
+
+    require_once __DIR__ . '/../models/ExternalLink.php';
+    $linkModel = new ExternalLink();
+    $links = $linkModel->getAll();
+
+    require __DIR__ . '/../views/admin/links.php';
+    exit;
+}
+
+// Admin - Dodaj External Link
+if ($uri == '/admin/links/add' && $method == 'POST') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+        http_response_code(403);
+        exit;
+    }
+
+    $title = $_POST['title'] ?? '';
+    $url = $_POST['url'] ?? '';
+    $description = $_POST['description'] ?? '';
+    $source = $_POST['source'] ?? '';
+    $icon = $_POST['icon'] ?? '🔗';
+
+    if (empty($title) || empty($url)) {
+        header('Location: /admin/links?error=empty');
+        exit;
+    }
+
+    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+
+    require_once __DIR__ . '/../models/ExternalLink.php';
+    $linkModel = new ExternalLink();
+    $linkModel->create($title, $url, $description, $source, $icon, $userId);
+
+    header('Location: /admin/links?success=added');
+    exit;
+}
+
+// Admin - Usuń External Link
+if (preg_match('#^/admin/links/delete/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+        http_response_code(403);
+        exit;
+    }
+
+    $linkId = (int)$matches[1];
+
+    require_once __DIR__ . '/../models/ExternalLink.php';
+    $linkModel = new ExternalLink();
+    $linkModel->delete($linkId);
+
+    header('Location: /admin/links?success=deleted');
+    exit;
+}
+
+// Admin - Toggle widoczność External Link
+if (preg_match('#^/admin/links/toggle/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+        http_response_code(403);
+        exit;
+    }
+
+    $linkId = (int)$matches[1];
+
+    require_once __DIR__ . '/../models/ExternalLink.php';
+    $linkModel = new ExternalLink();
+    $linkModel->toggleVisibility($linkId);
+
+    header('Location: /admin/links');
+    exit;
+}
+
+// Admin - Przesuń External Link (góra/dół)
+if (preg_match('#^/admin/links/move/(up|down)/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+        http_response_code(403);
+        exit;
+    }
+
+    $direction = $matches[1]; // up / down
+    $linkId    = (int)$matches[2];
+
+    require_once __DIR__ . '/../models/ExternalLink.php';
+    $linkModel = new ExternalLink();
+    $linkModel->move($linkId, $direction);
+
+    header('Location: /admin/links');
+    exit;
+}
+
 
 
 
@@ -943,6 +1043,93 @@ if (preg_match('#^/page/([a-z0-9-]+)$#', $uri, $matches)) {
     $page = $pageModel->findBySlug($slug);
     
     require __DIR__ . '/../views/pages/view.php';
+    exit;
+}
+
+// Lista wszystkich stron
+if ($uri === '/pages') {
+    $pageModel = new Page();
+    
+    // Paginacja
+    $perPage = 20;
+    $currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $offset = ($currentPage - 1) * $perPage;
+    
+    // Filtrowanie po kategorii
+    $categoryFilter = isset($_GET['category']) ? (int)$_GET['category'] : null;
+    
+    // Sortowanie
+    $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'updated'; // updated, created, title, views
+    
+    $db = Database::getInstance()->getConnection();
+    
+    // Query budowanie
+    $whereClause = '';
+    $params = [];
+    
+    if ($categoryFilter) {
+        $whereClause = 'WHERE pc.category_id = :category_id';
+        $params['category_id'] = $categoryFilter;
+    }
+    
+switch ($sortBy) {
+    case 'created':
+        $orderClause = 'p.created_at DESC';
+        break;
+    case 'title':
+        $orderClause = 'p.title ASC';
+        break;
+    case 'views':
+        $orderClause = 'p.views DESC';
+        break;
+    default:
+        $orderClause = 'p.updated_at DESC';
+        break;
+}
+
+    
+    // Pobierz strony
+    $sql = "
+        SELECT p.*, u.username as author, c.name as category_name
+        FROM pages p
+        LEFT JOIN users u ON p.created_by = u.user_id
+        LEFT JOIN page_categories pc ON p.page_id = pc.page_id
+        LEFT JOIN categories c ON pc.category_id = c.category_id
+        $whereClause
+        GROUP BY p.page_id
+        ORDER BY $orderClause
+        LIMIT :limit OFFSET :offset
+    ";
+    
+    $stmt = $db->prepare($sql);
+    foreach ($params as $key => $val) {
+        $stmt->bindValue(":$key", $val, PDO::PARAM_INT);
+    }
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $pages = $stmt->fetchAll();
+    
+    // Policz total dla paginacji
+    $countSql = "SELECT COUNT(DISTINCT p.page_id) FROM pages p LEFT JOIN page_categories pc ON p.page_id = pc.page_id $whereClause";
+    $countStmt = $db->prepare($countSql);
+    foreach ($params as $key => $val) {
+        $countStmt->bindValue(":$key", $val, PDO::PARAM_INT);
+    }
+    $countStmt->execute();
+    $totalPages = (int)$countStmt->fetchColumn();
+    $totalPagesCount = ceil($totalPages / $perPage);
+    
+    // Pobierz kategorie dla filtra
+    $categories = $db->query("
+        SELECT c.*, COUNT(pc.page_id) as pages_count
+        FROM categories c
+        LEFT JOIN page_categories pc ON c.category_id = pc.category_id
+        GROUP BY c.category_id
+        ORDER BY c.name ASC
+    ")->fetchAll();
+    
+    require __DIR__ . '/../views/pages-list.php';
     exit;
 }
 

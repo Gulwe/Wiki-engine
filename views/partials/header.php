@@ -15,16 +15,17 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
     <title><?= htmlspecialchars($siteName) ?></title>
 
     <!-- CSS w kolejności: base → komponenty → layout → wiki → admin → motywy -->
-    <link rel="stylesheet" href="/css/base.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/components.css?v=<?= time() ?>">
+     <link rel="stylesheet" href="/css/base.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/components.css?v=<?= time() ?>"> 
     <link rel="stylesheet" href="/css/layout.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/css/wiki.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/css/admin.css?v=<?= time() ?>">
     
     <!-- Motywy -->
-    <link rel="stylesheet" href="/css/themes/dark.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/themes/purple.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/themes/light.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/themes/sos.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/themes/ru.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/themes/zsi.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/themes/am.css?v=<?= time() ?>">
 
     <?= ThemeLoader::generateCSS(); ?>
 </head>
@@ -51,7 +52,7 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
 
         <!-- Search Box -->
         <div class="search-box">
-            <span class="search-icon"></span>
+            <span class="search-icon">🔍</span>
             <input type="text" id="search-input" placeholder="Szukaj w Wiki..." autocomplete="off">
             <div id="search-results"></div>
         </div>
@@ -151,21 +152,21 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
                     <img src="/symbols/AM.png" alt="Theme" id="current-theme-icon">
                 </button>
                 <div class="theme-dropdown" id="theme-dropdown">
-                    <div class="theme-option" data-theme="default">
-                        <img src="/symbols/AM.png" alt="Default">
+                                    <div class="theme-option" data-theme="default">
+                        <img src="/symbols/soslogo.png" alt="Default">
+                        <span>SoS</span>
+                    </div>
+                    <div class="theme-option" data-theme="am">
+                        <img src="/symbols/AM.png" alt="AM">
                         <span>AM</span>
                     </div>
-                    <div class="theme-option" data-theme="dark">
-                        <img src="/symbols/RU.png" alt="Dark">
+                    <div class="theme-option" data-theme="ru">
+                        <img src="/symbols/RU.png" alt="RU">
                         <span>RU</span>
                     </div>
-                    <div class="theme-option" data-theme="purple">
-                        <img src="/symbols/ZSI.png" alt="Purple">
+                    <div class="theme-option" data-theme="zsi">
+                        <img src="/symbols/ZSI.png" alt="ZSI">
                         <span>ZSI</span>
-                    </div>
-                    <div class="theme-option" data-theme="light">
-                        <img src="/symbols/soslogo.png" alt="Light">
-                        <span>SOS</span>
                     </div>
                 </div>
             </div>
@@ -221,10 +222,10 @@ $(document).ready(function() {
 
     // Mapa ikon motywów
     const themeIcons = {
-        'default': '/symbols/AM.png',
-        'dark': '/symbols/RU.png',
-        'purple': '/symbols/ZSI.png',
-        'light': '/symbols/soslogo.png'
+        'default': '/symbols/soslogo.png',
+        'ru': '/symbols/RU.png',
+        'zsi': '/symbols/ZSI.png',
+        'am': '/symbols/AM.png'
     };
 
     // Funkcja aplikująca motyw

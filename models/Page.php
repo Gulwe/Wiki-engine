@@ -48,4 +48,20 @@ class Page {
         
         return (int)$this->db->lastInsertId();
     }
+    
+    // Pobierz N ostatnich stron
+public function getRecent($limit = 5) {
+    $stmt = $this->db->prepare("
+        SELECT p.*, u.username as author
+        FROM pages p
+        LEFT JOIN users u ON p.created_by = u.user_id
+        ORDER BY p.updated_at DESC
+        LIMIT :limit
+    ");
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+    
 }
