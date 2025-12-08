@@ -1,6 +1,8 @@
 /* STYL AM – jaœniejszy, bardziej niebieski */
 html[data-theme="am"] {
     /* T³a */
+    --bg-primary: #020318;
+    --bg-secondary: #030922;
     --bg-page: #02061a;
     --bg-surface: #020b24;
     --bg-surface-alt: #031131;
@@ -10,7 +12,7 @@ html[data-theme="am"] {
     --card-bg-soft: #0a2154;
 
     /* Teksty – trochê jaœniejsze */
-    --text-primary: #5c7aff;
+    --text-primary: #e4ebff;
     --text-secondary: #d7e3ff;
     --text-muted: #a0aed5;
 
@@ -18,6 +20,7 @@ html[data-theme="am"] {
     --accent-main: #5c7aff;
     --accent-main-soft: #2344c5;
     --accent-strong: #000f5a;
+    --accent-secondary: #60a5fa;
 
     /* Obramowania – jaœniejsze niebieskie */
     --border-subtle: #1b2b63;
@@ -48,4 +51,23 @@ html[data-theme="am"] {
     --info-bg: #041437;
     --info-border: #3b82f6;
     --info-text: #d0e2ff;
+
+    /* Przyciski / badge */
+    --btn-primary-bg: linear-gradient(135deg, #2344c5, #5c7aff);
+    --btn-primary-border: #60a5fa;
+
+    --btn-secondary-bg: rgba(37, 99, 235, 0.25);
+    --btn-secondary-border: #1b2b63;
+
+    --badge-admin-bg: linear-gradient(135deg, #2563eb, #1d4ed8);
+    --badge-editor-bg: linear-gradient(135deg, #5c7aff, #2563eb);
+    --badge-viewer-bg: rgba(75, 85, 99, 0.6);
+
+    /* Progress / timeline / dekoracje */
+    --progress-bg: #020b24;
+    --progress-fill: linear-gradient(90deg, #2344c5, #5c7aff);
+
+    /* Linki */
+    --link-color: #93c5fd;
+    --link-hover: #bfdbfe;
 }

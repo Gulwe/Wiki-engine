@@ -664,3 +664,109 @@ ol li::marker {
         gap: 10px;
     }
 }
+
+/* CATEGORY PAGE */
+
+.category-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+.category-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.category-description {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+.category-stats {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* PAGE LIST – kafelki z linkiem */
+
+.page-list {
+    list-style: none;
+    margin: 25px 0 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.page-list-item-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.page-list-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.page-list-item-link:hover .page-list-item {
+    background-color: var(--card-bg-soft);
+    border-color: var(--accent-main);
+    transform: translateY(-2px);
+}
+
+.page-list-title {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.page-list-item-link:hover .page-list-title {
+    color: var(--text-primary);
+}
+
+.page-list-desc {
+    margin: 6px 0 8px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.page-list-tags {
+    margin-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.page-lang-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background-color: var(--info-bg);
+    border: 1px solid var(--info-border);
+    font-size: 11px;
+    color: var(--info-text);
+}
+
+.page-meta {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+

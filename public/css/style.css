@@ -3,8 +3,9 @@
 @import url('theme-ru.css');
 @import url('theme-zsi.css');
 
-@import url('base.css');
-@import url('layout.css'); 
+ 
 @import url('components.css');
 @import url('admin.css');
 @import url('wiki.css');
+@import url('layout.css');
+@import url('base.css');

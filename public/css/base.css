@@ -10,6 +10,7 @@
 body {
     font-family: 'Russo One', 'Segoe UI', 'Helvetica Neue', sans-serif;
     background-color: var(--bg-page);
+    background: var(--bg-page); 
     color: var(--text-primary);
     line-height: 1.7;
     position: relative;
@@ -46,9 +47,20 @@ a {
     transition: all 0.3s;
 }
 
-a:hover {
-    color: var(--accent-hover);
-    text-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+/* Kolor linków zależny od motywu */
+a,
+.nav-link {
+    color: var(--link-color, var(--accent-secondary, #4990c6));
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
+
+/* Hover linków – w pełni „tematyczny” */
+a:hover,
+.nav-link:hover {
+    color: var(--link-hover, var(--accent-secondary, #7bb5ff));
+}
+
+
 
 

@@ -5,178 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edytuj: <?= htmlspecialchars($page['title'] ?? 'Nowa strona') ?> - Wiki Engine</title>
     <link rel="stylesheet" href="/css/style.css">
+    <?= ThemeLoader::generateCSS() ?>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="/js/templates.js"></script> -->
 </head>
 <body>
     <?php include __DIR__ . '/../partials/header.php'; ?>
     
     <div class="container">
-        <h1>✏️ <?= isset($page['page_id']) && $page['page_id'] ? 'Edytuj' : 'Utwórz' ?> Stronę</h1>
+        <div class="page-header">
+            <h1>✏️ <?= isset($page['page_id']) && $page['page_id'] ? 'Edytuj stronę' : 'Utwórz stronę' ?></h1>
+        </div>
         
         <?php if (isset($_GET['error']) && $_GET['error'] === 'empty'): ?>
             <div class="error">Tytuł i treść nie mogą być puste!</div>
         <?php endif; ?>
         
-        <form method="POST" action="/page/<?= htmlspecialchars($page['slug']) ?>/save">
+        <form method="POST" action="/page/<?= htmlspecialchars($page['slug']) ?>/save" class="editor-form">
             <div class="form-group">
-                <label>Tytuł strony:</label>
-                <input type="text" name="title" value="<?= htmlspecialchars($page['title'] ?? '') ?>" required autofocus>
+                <label for="title">Tytuł strony:</label>
+                <input type="text" id="title" name="title"
+                       value="<?= htmlspecialchars($page['title'] ?? '') ?>" required autofocus>
             </div>
             
             <div class="form-group">
-                <label>Treść (Markdown):</label>
-                
+                <label for="content">Treść (Markdown):</label>
+
                 <!-- Toolbar -->
                 <div class="markdown-toolbar">
                     <!-- Formatowanie tekstu -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('**', '**', 'pogrubiony tekst')" title="Pogrubienie">
-                            <strong>B</strong>
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('*', '*', 'pochylony tekst')" title="Kursywa">
-                            <em>I</em>
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('~~', '~~', 'przekreślony')" title="Przekreślenie">
-                            <s>S</s>
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('__', '__', 'podkreślony')" title="Podkreślenie">
-                            <u>U</u>
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('==', '==', 'podświetlony')" title="Highlight">
-                            🖍️
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('`', '`', 'kod')" title="Kod inline">
-                            &lt;/&gt;
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('**', '**', 'pogrubiony tekst')" title="Pogrubienie"><strong>B</strong></button>
+                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('*', '*', 'pochylony tekst')" title="Kursywa"><em>I</em></button>
+                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('~~', '~~', 'przekreślony')" title="Przekreślenie"><s>S</s></button>
+                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('__', '__', 'podkreślony')" title="Podkreślenie"><u>U</u></button>
+                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('==', '==', 'podświetlony')" title="Highlight">🖍️</button>
+                        <button type="button" class="toolbar-btn" onclick="insertMarkdown('`', '`', 'kod')" title="Kod inline">&lt;/&gt;</button>
                     </div>
-                    
+
                     <!-- Nagłówki -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertAtStart('## ', 'Nagłówek 2')" title="Nagłówek 2">
-                            H2
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertAtStart('### ', 'Nagłówek 3')" title="Nagłówek 3">
-                            H3
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertAtStart('#### ', 'Nagłówek 4')" title="Nagłówek 4">
-                            H4
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertAtStart('## ', 'Nagłówek 2')" title="Nagłówek 2">H2</button>
+                        <button type="button" class="toolbar-btn" onclick="insertAtStart('### ', 'Nagłówek 3')" title="Nagłówek 3">H3</button>
+                        <button type="button" class="toolbar-btn" onclick="insertAtStart('#### ', 'Nagłówek 4')" title="Nagłówek 4">H4</button>
                     </div>
-                    
+
                     <!-- Listy i cytaty -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertAtStart('- ', 'Element listy')" title="Lista">
-                            📝
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertAtStart('1. ', 'Element numerowany')" title="Lista numerowana">
-                            🔢
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertAtStart('> ', 'Cytat')" title="Cytat">
-                            💬
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertAtStart('- ', 'Element listy')" title="Lista">📝</button>
+                        <button type="button" class="toolbar-btn" onclick="insertAtStart('1. ', 'Element numerowany')" title="Lista numerowana">🔢</button>
+                        <button type="button" class="toolbar-btn" onclick="insertAtStart('> ', 'Cytat')" title="Cytat">💬</button>
                     </div>
-                    
+
                     <!-- Linki i media -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertLink()" title="Link">
-                            🔗
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertImage()" title="Obrazek">
-                            🖼️
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertTable()" title="Tabela">
-                            📊
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertYouTube()" title="YouTube">
-    ▶️
-</button>
-
+                        <button type="button" class="toolbar-btn" onclick="insertLink()" title="Link">🔗</button>
+                        <button type="button" class="toolbar-btn" onclick="insertImage()" title="Obrazek">🖼️</button>
+                        <button type="button" class="toolbar-btn" onclick="insertTable()" title="Tabela">📊</button>
+                        <button type="button" class="toolbar-btn" onclick="insertYouTube()" title="YouTube">▶️</button>
                     </div>
-                    
+
                     <!-- Struktury wiki -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertBox()" title="Box / Panel">
-                            📦
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertAlert()" title="Alert / Powiadomienie">
-                            🔔
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertCard()" title="Karta">
-                            🃏
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertSidebar()" title="Sidebar / Infobox">
-                            📌
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertBox()" title="Box / Panel">📦</button>
+                        <button type="button" class="toolbar-btn" onclick="insertAlert()" title="Alert / Powiadomienie">🔔</button>
+                        <button type="button" class="toolbar-btn" onclick="insertCard()" title="Karta">🃏</button>
+                        <button type="button" class="toolbar-btn" onclick="insertSidebar()" title="Sidebar / Infobox">📌</button>
                     </div>
-                    
+
                     <!-- Layouty -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertColumns()" title="Kolumny">
-                            ⚏
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertGrid()" title="Siatka">
-                            ⊞
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertSplit()" title="Podział 2-kolumnowy">
-                            ⚏⚏
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertSection()" title="Sekcja">
-                            📄
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertColumns()" title="Kolumny">⚏</button>
+                        <button type="button" class="toolbar-btn" onclick="insertGrid()" title="Siatka">⊞</button>
+                        <button type="button" class="toolbar-btn" onclick="insertSplit()" title="Podział 2-kolumnowy">⚏⚏</button>
+                        <button type="button" class="toolbar-btn" onclick="insertSection()" title="Sekcja">📄</button>
                     </div>
-                    
+
                     <!-- Interaktywne -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertAccordion()" title="Accordion / Zwijane">
-                            ▼
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertProgress()" title="Pasek postępu">
-                            ▬▬▬
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertTimeline()" title="Oś czasu">
-                            ⏱️
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertButton()" title="Przycisk">
-                            🔘
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertAccordion()" title="Accordion / Zwijane">▼</button>
+                        <button type="button" class="toolbar-btn" onclick="insertProgress()" title="Pasek postępu">▬▬▬</button>
+                        <button type="button" class="toolbar-btn" onclick="insertTimeline()" title="Oś czasu">⏱️</button>
+                        <button type="button" class="toolbar-btn" onclick="insertButton()" title="Przycisk">🔘</button>
                     </div>
-                    
+
                     <!-- Dodatki -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertBadge()" title="Etykieta / Badge">
-                            🏷️
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertIcon()" title="Ikona">
-                            ⭐
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertTag()" title="Hashtag">
-                            #️⃣
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertBadge()" title="Etykieta / Badge">🏷️</button>
+                        <button type="button" class="toolbar-btn" onclick="insertIcon()" title="Ikona">⭐</button>
+                        <button type="button" class="toolbar-btn" onclick="insertTag()" title="Hashtag">#️⃣</button>
                     </div>
-                    
+
                     <!-- Narzędzia -->
                     <div class="toolbar-section">
-                        <button type="button" class="toolbar-btn" onclick="insertText('{{toc}}\n\n')" title="Spis treści">
-                            📑
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertCodeBlock()" title="Blok kodu">
-                            💻
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertText('{{divider}}\n\n')" title="Separator">
-                            ➖
-                        </button>
-                        <button type="button" class="toolbar-btn" onclick="insertText('{{clear}}\n\n')" title="Clear float">
-                            🧹
-                        </button>
+                        <button type="button" class="toolbar-btn" onclick="insertText('{{toc}}\n\n')" title="Spis treści">📑</button>
+                        <button type="button" class="toolbar-btn" onclick="insertCodeBlock()" title="Blok kodu">💻</button>
+                        <button type="button" class="toolbar-btn" onclick="insertText('{{divider}}\n\n')" title="Separator">➖</button>
+                        <button type="button" class="toolbar-btn" onclick="insertText('{{clear}}\n\n')" title="Clear float">🧹</button>
                     </div>
+                    <!-- Szablony stron -->
+<div class="toolbar-section">
+    <select id="template-select" class="toolbar-select"
+            onchange="insertTemplate(this.value); this.value='';">
+        <option value="">🧩 Wstaw szablon…</option>
+        <?php if (!empty($templates)): ?>
+            <?php foreach ($templates as $tpl): ?>
+                <option value="<?= htmlspecialchars($tpl['machine_key']) ?>">
+                    <?= htmlspecialchars($tpl['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </select>
+</div>
+
+
+
                 </div>
-                
+
                 <textarea name="content" id="content" rows="20" required><?= htmlspecialchars($page['content'] ?? '') ?></textarea>
             </div>
             
             <div class="form-group">
-                <label>Komentarz do zmian:</label>
-                <input type="text" name="comment" placeholder="Opcjonalny opis zmian (np. 'Poprawiono błędy', 'Dodano sekcję X')">
+                <label for="comment">Komentarz do zmian:</label>
+                <input type="text" id="comment" name="comment" placeholder="Opcjonalny opis zmian (np. 'Poprawiono błędy', 'Dodano sekcję X')">
             </div>
             
             <div class="form-group">
@@ -186,7 +137,7 @@
                 $allCategories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                 
                 $assignedCategories = [];
-                if (isset($page['page_id']) && $page['page_id']) {
+                if (!empty($page['page_id'])) {
                     $stmt = $db->prepare("SELECT category_id FROM page_categories WHERE page_id = :page_id");
                     $stmt->execute(['page_id' => $page['page_id']]);
                     $assignedCategories = array_column($stmt->fetchAll(), 'category_id');
@@ -194,18 +145,18 @@
                 ?>
                 
                 <?php if (empty($allCategories)): ?>
-                    <p style="color:#a78bfa; font-size:14px;">
-                        Brak kategorii. 
-                        <?php if ($_SESSION['role'] === 'admin'): ?>
-                            <a href="/admin/categories" style="color:#818cf8;">Dodaj kategorię w panelu admina</a>
+                    <p class="info">
+                        Brak kategorii.
+                        <?php if (!empty($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                            <a href="/admin/categories">Dodaj kategorię w panelu admina</a>
                         <?php endif; ?>
                     </p>
                 <?php else: ?>
                     <div class="categories-checkboxes">
                         <?php foreach ($allCategories as $cat): ?>
                             <label class="checkbox-label">
-                                <input type="checkbox" name="categories[]" value="<?= $cat['category_id'] ?>" 
-                                       <?= in_array($cat['category_id'], $assignedCategories) ? 'checked' : '' ?>>
+                                <input type="checkbox" name="categories[]" value="<?= $cat['category_id'] ?>"
+                                       <?= in_array($cat['category_id'], $assignedCategories, true) ? 'checked' : '' ?>>
                                 <?= htmlspecialchars($cat['name']) ?>
                             </label>
                         <?php endforeach; ?>
@@ -215,90 +166,144 @@
             
             <div class="editor-actions">
                 <button type="submit" class="btn">💾 Zapisz</button>
-                
-                <?php if (isset($page['page_id']) && $page['page_id']): ?>
-                    <a href="/page/<?= htmlspecialchars($page['slug']) ?>" class="btn" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444;">
+
+                <?php if (!empty($page['page_id'])): ?>
+                    <a href="/page/<?= htmlspecialchars($page['slug']) ?>" class="btn btn-danger">
                         ❌ Anuluj
                     </a>
                 <?php else: ?>
-                    <a href="/" class="btn" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444;">
+                    <a href="/" class="btn btn-danger">
                         ❌ Anuluj
                     </a>
                 <?php endif; ?>
                 
-                <button type="button" id="preview-btn" class="btn" style="background: rgba(59, 130, 246, 0.2); border-color: #3b82f6;">
+                <button type="button" id="preview-btn" class="btn btn-secondary">
                     👁️ Podgląd
                 </button>
             </div>
         </form>
         
-        <div id="preview-container" style="display:none; margin-top: 30px;">
+        <section id="preview-container" class="preview-container" style="display:none;">
             <h2>👁️ Podgląd</h2>
-            <div id="preview-content" style="padding: 20px; background: rgba(30, 0, 60, 0.4); border-radius: 12px; border: 2px solid rgba(139, 92, 246, 0.3);"></div>
-        </div>
+            <div id="preview-content" class="preview-content"></div>
+        </section>
     </div>
     
-    <style>
-    .markdown-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 12px;
-        background: rgba(30, 0, 60, 0.4);
-        border: 2px solid rgba(139, 92, 246, 0.3);
-        border-radius: 10px 10px 0 0;
-        border-bottom: none;
-        margin-bottom: 0;
-    }
+    <?php include __DIR__ . '/../partials/footer.php'; ?>
+
+
+<style>
+/* Editor toolbar */
+
+.markdown-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    background: var(--card-bg-soft);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.toolbar-section {
+    display: flex;
+    gap: 4px;
+    padding-right: 8px;
+    border-right: 1px solid var(--border-subtle);
+}
+
+.toolbar-section:last-child {
+    border-right: none;
+    padding-right: 0;
+}
+
+.toolbar-btn {
+    padding: 6px 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    min-width: 34px;
+}
+
+.toolbar-btn:hover {
+    background: var(--bg-surface-alt);
+    border-color: var(--accent-main);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.toolbar-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* scalony textarea z toolbarem */
+#content {
+    border-radius: 0 0 10px 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* przyciski pod edytorem */
+.editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn.btn-secondary {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+/* podgląd */
+.preview-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle);
+}
+
+.preview-content {
+    margin-top: 10px;
+}
+
+.toolbar-select {
+    padding: 6px 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
     
+@media (max-width: 768px) {
     .toolbar-section {
-        display: flex;
-        gap: 4px;
-        padding-right: 8px;
-        border-right: 1px solid rgba(139, 92, 246, 0.2);
-    }
-    
-    .toolbar-section:last-child {
         border-right: none;
+        padding-right: 0;
     }
-    
-    .toolbar-btn {
-        padding: 8px 12px;
-        background: rgba(139, 92, 246, 0.2);
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        border-radius: 6px;
-        color: #c4b5fd;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        min-width: 36px;
-    }
-    
-    .toolbar-btn:hover {
-        background: rgba(139, 92, 246, 0.4);
-        border-color: #8b5cf6;
-        transform: translateY(-1px);
-    }
-    
-    .toolbar-btn:active {
-        transform: translateY(0);
-    }
-    
-    #content {
-        border-radius: 0 0 10px 10px !important;
-        border-top: none !important;
-    }
-    
-    @media (max-width: 768px) {
-        .toolbar-section {
-            border-right: none;
-            padding-right: 0;
-        }
-    }
-    </style>
+}
+
+</style>
     
     <script>
+window.WIKI_TEMPLATES = <?= json_encode(
+    array_column($templates ?? [], 'content', 'machine_key'),
+    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+); ?>;
     function insertAtCursor(textarea, text) {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
@@ -659,6 +664,17 @@ Treść zwijana...
             }
         });
     });
+    
+    
+function insertTemplate(type) {
+    if (!type || !window.WIKI_TEMPLATES) return;
+    const tpl = window.WIKI_TEMPLATES[type];
+    if (!tpl) return;
+    insertText(tpl);
+}
+
+
+    
     </script>
     <?php include __DIR__ . '/../partials/footer.php'; ?>
 </body>

@@ -1,31 +1,42 @@
-/* PURPLE – piaskowo-¿ó³ty */
+/* ZSI – piaskowo-¿ó³ty, ciep³y */
 html[data-theme="zsi"] {
+    /* T³a ogólne */
+    --bg-primary: #100a04;
+    --bg-secondary: #181006;
     --bg-page: #110b05;
     --bg-surface: #1c1409;
     --bg-surface-alt: #24190c;
 
+    /* Karty / boxy */
     --card-bg: #21160a;
     --card-bg-soft: #261a0c;
 
-    --text-primary: #fef3c7;
-    --text-secondary: #fde68a;
-    --text-muted: #eab308;
+    /* Teksty – teraz bia³e / prawie bia³e */
+    --text-primary: #ffffff;
+    --text-secondary: #fef9c3;  /* bardzo jasny ¿ó³ty jako drugi */
+    --text-muted: #eab308;      /* z³oty do akcentów */
 
+    /* Akcenty */
     --accent-main: #f59e0b;
     --accent-main-soft: #d97706;
     --accent-strong: #b45309;
+    --accent-secondary: #fbbf24;
 
-    --border-subtle: #78480a;
-    --border-strong: #3b260c;
+    /* Obramowania */
+    --border-subtle: #3b260c;
+    --border-strong: #78480a;
     --border-color: #78480a;
 
+    /* Inputy */
     --input-bg: #150f06;
     --input-border: #2a1c0a;
     --input-border-focus: #f59e0b;
 
+    /* Cienie */
     --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.45);
     --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.55);
 
+    /* Statusy */
     --success-bg: #1f2608;
     --success-border: #84cc16;
     --success-text: #d9f99d;
@@ -41,4 +52,23 @@ html[data-theme="zsi"] {
     --info-bg: #1b1406;
     --info-border: #fbbf24;
     --info-text: #fee9a6;
+
+    /* Przyciski / badge */
+    --btn-primary-bg: linear-gradient(135deg, #d97706, #f59e0b);
+    --btn-primary-border: #fbbf24;
+
+    --btn-secondary-bg: rgba(245, 158, 11, 0.18);
+    --btn-secondary-border: #78480a;
+
+    --badge-admin-bg: linear-gradient(135deg, #f97316, #b45309);
+    --badge-editor-bg: linear-gradient(135deg, #f59e0b, #d97706);
+    --badge-viewer-bg: rgba(82, 82, 91, 0.7);
+
+    /* Progress / dekoracje */
+    --progress-bg: #1c1409;
+    --progress-fill: linear-gradient(90deg, #d97706, #facc15);
+
+    /* Linki */
+    --link-color: #fef3c7;
+    --link-hover: #ffffff;
 }

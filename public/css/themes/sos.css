@@ -1,48 +1,74 @@
 :root {
+    /* Tła */
     --bg-primary: #010b10;
     --bg-secondary: #02141d;
     --bg-tertiary: #03212c;
     --bg-surface: #03212c;
 
-    --text-primary: #96efff;
+    /* Tekst – bardziej biały, ale z lekkim cyjanem */
+    --text-primary: #e6faff;
     --text-secondary: #c4ecf4;
     --text-muted: #8fa7b2;
 
-    --accent-primary: #024f63;
+    /* Akcenty */
+    --accent-primary: #0085a7;
     --accent-secondary: #0390a8;
     --accent-hover: #04a4bf;
 
-    /* bordery */
+    --accent-main:   var(--accent-primary);
+    --accent-strong: var(--accent-secondary);
+
+    /* Bordery */
     --border-subtle: #234763;
     --border-strong: #315a7a;
     --border-color: var(--border-subtle);
 
-    /* karty / header / inputy – BEZ alpha */
-    --card-bg: #031521;          /* ciemny cyjanowy panel */
-    --card-bg-soft: #052132;     /* delikatnie jaśniejsze */
+    /* Karty / header / inputy – bez alpha */
+    --card-bg: #031521;
+    --card-bg-soft: #052132;
     --header-bg: #020f19;
     --input-bg: #020e17;
     --input-border: #25657d;
+    --input-border-focus: #04a4bf;
 
-    /* cienie */
+    /* Cienie */
     --shadow-sm: 0 4px 15px rgba(0, 20, 28, 0.4);
     --shadow-md: 0 8px 30px rgba(0, 20, 28, 0.55);
     --shadow-lg: 0 20px 60px rgba(0, 20, 28, 0.7);
 
-    /* statusy – możesz zostawić delikatnie przezroczyste */
+    /* Statusy */
     --success-bg: rgba(34, 197, 94, 0.08);
     --success-border: #22c55e;
-    --success-text: #86efac;
+    --success-text: #bbf7d0;
 
     --error-bg: rgba(239, 68, 68, 0.08);
     --error-border: #ef4444;
-    --error-text: #fca5a5;
+    --error-text: #fecaca;
 
     --warning-bg: rgba(250, 204, 21, 0.08);
     --warning-border: #facc15;
-    --warning-text: #fcd34d;
+    --warning-text: #fef3c7;
 
     --info-bg: rgba(3, 105, 161, 0.08);
     --info-border: #0ea5e9;
-    --info-text: #7dd3fc;
+    --info-text: #bae6fd;
+
+    /* Przyciski / badge */
+    --btn-primary-bg: linear-gradient(135deg, #024f63, #0390a8);
+    --btn-primary-border: #04a4bf;
+
+    --btn-secondary-bg: rgba(3, 144, 168, 0.18);
+    --btn-secondary-border: #25657d;
+
+    --badge-admin-bg: linear-gradient(135deg, #0ea5e9, #0369a1);
+    --badge-editor-bg: linear-gradient(135deg, #22c1c3, #0390a8);
+    --badge-viewer-bg: rgba(148, 163, 184, 0.7);
+
+    /* Progress / dekoracje */
+    --progress-bg: #02141d;
+    --progress-fill: linear-gradient(90deg, #024f63, #0390a8);
+
+    /* Linki */
+    --link-color: #7dd3fc;
+    --link-hover: #e0f2fe;
 }

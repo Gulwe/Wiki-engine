@@ -63,5 +63,27 @@ public function getRecent($limit = 5) {
     return $stmt->fetchAll();
 }
 
+public function getRecentlyUpdated($limit = 5) {
+    $stmt = $this->db->prepare("
+        SELECT 
+            p.slug,
+            p.title,
+            u.username AS author,
+            r.created_at AS last_modified
+        FROM pages p
+        LEFT JOIN users u ON p.created_by = u.user_id
+        LEFT JOIN revisions r ON p.current_revision_id = r.revision_id
+        WHERE p.current_revision_id IS NOT NULL
+        ORDER BY r.created_at DESC
+        LIMIT :limit
+    ");
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
+
+
     
 }

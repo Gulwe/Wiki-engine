@@ -18,6 +18,7 @@
             <a href="/admin/categories" class="btn">📁 Kategorie</a>
             <a href="/admin/customize" class="btn">🎨 Customizacja</a>
             <a href="/analytics" class="btn">📊 Statystyki</a>
+            <a href="/admin/templates" class="btn">🧩 Szablony</a>
         </div>
         
         <div class="stats-grid">
@@ -77,7 +78,7 @@
             <h2>ℹ️ Informacje Systemowe</h2>
             <table class="info-table">
                 <tr>
-                    <td><strong>PHP Version:</strong></td>
+                    <td><strong>Wersja PHP:</strong></td>
                     <td><?= phpversion() ?></td>
                 </tr>
                 <tr>

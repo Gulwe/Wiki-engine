@@ -7,6 +7,23 @@ session_start();
 require_once __DIR__ . '/../core/Database.php';
 require_once __DIR__ . '/../core/ThemeLoader.php';
 
+// Auto‑wylogowanie zbanowanego użytkownika
+if (!empty($_SESSION['user_id'])) {
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("SELECT is_banned FROM users WHERE user_id = :id");
+    $stmt->execute(['id' => $_SESSION['user_id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($row && !empty($row['is_banned'])) {
+        // wyczyść sesję i przenieś na login z komunikatem
+        session_unset();
+        session_destroy();
+        header('Location: /login?error=banned');
+        exit;
+    }
+}
+
+
 // Sprawd藕 tryb maintenance
 $maintenanceMode = ThemeLoader::get('maintenance_mode', '0');
 if ($maintenanceMode == '1' && (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin')) {
@@ -168,23 +185,32 @@ if ($uri === '/api/preview' && $method === 'POST') {
     exit;
 }
 
-// NOWA STRONA - MUSI BY膯 PRZED /page/{slug}!
+// NOWA STRONA - MUSI BYĆ PRZED /page/{slug}!
 if ($uri === '/page/new') {
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login');
         exit;
     }
-    
+
+    // Viewer nie może tworzyć stron
+    if ($_SESSION['role'] === 'viewer') {
+        header('Location: /?error=forbidden');
+        exit;
+    }
+
     $slug = 'new-page-' . time();
     $page = [
-        'slug' => $slug,
-        'title' => '',
+        'slug'    => $slug,
+        'title'   => '',
         'content' => '',
-        'page_id' => null
+        'page_id' => null,
     ];
+
     require __DIR__ . '/../views/pages/edit.php';
     exit;
 }
+
+
 
 // Wy艣wietl konkretn膮 rewizj臋
 if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
@@ -316,20 +342,25 @@ if (preg_match('#^/page/([a-z0-9-]+)/history$#', $uri, $matches)) {
     exit;
 }
 
-// Zapisz stron臋
-if (preg_match('#^/page/([a-z0-9-]+)/save$#', $uri, $matches) && $method === 'POST') {
-    $slug = $matches[1];
-    
+// Zapisz stronę
+if (preg_match('#^/page/([a-z0-9\-]+)/save$#', $uri, $matches) && $method === 'POST') {
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login');
         exit;
     }
-    
+
+    if ($_SESSION['role'] === 'viewer') {
+        header('Location: /?error=forbidden');
+        exit;
+    }
+
     require_once __DIR__ . '/../controllers/PageController.php';
     $pageController = new PageController();
-    $pageController->save($slug);
+    $pageController->save($matches[1]);
     exit;
 }
+
+
 
 // Edytuj stron臋
 if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
@@ -351,7 +382,10 @@ if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
             'page_id' => null
         ];
     }
-    
+    $db = Database::getInstance()->getConnection();
+$templates = $db->query("SELECT machine_key, name, content FROM templates WHERE is_active = 1 ORDER BY name")->fetchAll();
+
+
     require __DIR__ . '/../views/pages/edit.php';
     exit;
 }
@@ -423,7 +457,12 @@ if ($uri === '/admin/users') {
     $db = Database::getInstance()->getConnection();
     $users = $db->query("
         SELECT 
-            u.*,
+            u.user_id,
+            u.username,
+            u.email,
+            u.role,
+            u.created_at,
+            u.is_banned,
             COALESCE(p.pages_created, 0)   AS pages_created,
             COALESCE(r.total_edits, 0)     AS total_edits,
             COALESCE(c.total_comments, 0)  AS total_comments
@@ -449,6 +488,31 @@ if ($uri === '/admin/users') {
     require __DIR__ . '/../views/admin/users.php';
     exit;
 }
+
+// Admin - Podgląd szablonu
+if (preg_match('#^/admin/templates/preview/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        http_response_code(403);
+        exit('403 - Brak dostępu');
+    }
+
+    $templateId = (int)$matches[1];
+
+    $templateModel = new Templates();
+    $template = $templateModel->findById($templateId);
+
+    if (!$template) {
+        http_response_code(404);
+        require __DIR__ . '/../views/404.php';
+        exit;
+    }
+
+    require __DIR__ . '/../views/admin/template-preview.php';
+    exit;
+}
+
+
+
 
 
 // Admin - Dodaj u偶ytkownika
@@ -529,6 +593,107 @@ if (preg_match('#^/admin/users/delete/(\d+)$#', $uri, $matches)) {
     header('Location: /admin/users?success=deleted');
     exit;
 }
+
+// Admin - Zbanuj użytkownika
+if (preg_match('#^/admin/users/ban/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { http_response_code(403); exit; }
+    $userId = (int)$matches[1];
+    if ($userId === $_SESSION['user_id']) { header('Location: /admin/users?error=self'); exit; }
+
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("UPDATE users SET is_banned = 1 WHERE user_id = :id");
+    $stmt->execute(['id' => $userId]);
+    header('Location: /admin/users?success=banned');
+    exit;
+}
+
+// Admin - Odbanuj użytkownika
+if (preg_match('#^/admin/users/unban/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { http_response_code(403); exit; }
+    $userId = (int)$matches[1];
+
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("UPDATE users SET is_banned = 0 WHERE user_id = :id");
+    $stmt->execute(['id' => $userId]);
+    header('Location: /admin/users?success=unbanned');
+    exit;
+}
+
+// Admin - Szablony
+if ($uri === '/admin/templates') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        http_response_code(403);
+        exit;
+    }
+
+    $db = Database::getInstance()->getConnection();
+
+    $stmt = $db->query("
+        SELECT
+            template_id,
+            name,
+            machine_key AS slug,
+            content,
+            updated_at
+        FROM templates
+        ORDER BY name ASC
+    ");
+
+    $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    require __DIR__ . '/../views/admin/templates.php';
+    exit;
+}
+
+// Admin - Dodaj szablon
+if ($uri === '/admin/templates/add' && $method === 'POST') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { http_response_code(403); exit; }
+
+    $name   = trim($_POST['name'] ?? '');
+    $key    = trim($_POST['machine_key'] ?? '');
+    $content = $_POST['content'] ?? '';
+
+    if ($name === '' || $key === '' || $content === '') {
+        header('Location: /admin/templates?error=empty');
+        exit;
+    }
+
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("INSERT INTO templates (name, machine_key, content) VALUES (:name, :key, :content)");
+    try {
+        $stmt->execute(['name' => $name, 'key' => $key, 'content' => $content]);
+        header('Location: /admin/templates?success=added');
+    } catch (PDOException $e) {
+        header('Location: /admin/templates?error=exists');
+    }
+    exit;
+}
+
+// Admin - Zapisz edycję szablonu
+if (preg_match('#^/admin/templates/(\d+)/save$#', $uri, $m) && $method === 'POST') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { http_response_code(403); exit; }
+
+    $id      = (int)$m[1];
+    $name    = trim($_POST['name'] ?? '');
+    $key     = trim($_POST['machine_key'] ?? '');
+    $content = $_POST['content'] ?? '';
+
+    if ($name === '' || $key === '' || $content === '') {
+        header('Location: /admin/templates?error=empty');
+        exit;
+    }
+
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("
+        UPDATE templates
+        SET name = :name, machine_key = :key, content = :content
+        WHERE template_id = :id
+    ");
+    $stmt->execute(['name' => $name, 'key' => $key, 'content' => $content, 'id' => $id]);
+    header('Location: /admin/templates?success=saved');
+    exit;
+}
+
 
 
 // Admin - Kategorie
@@ -639,7 +804,60 @@ if ($uri === '/admin/customization/save' && $method === 'POST') {
     exit;
 }
 
-// Kategoria - lista stron
+// Profil użytkownika
+if (preg_match('#^/user/(\d+)$#', $uri, $matches)) {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: /login');
+        exit;
+    }
+
+    $userId = (int)$matches[1];
+
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("
+        SELECT 
+            u.user_id,
+            u.username,
+            u.email,
+            u.role,
+            u.created_at,
+            u.is_banned,
+            COALESCE(p.pages_created, 0)   AS pages_created,
+            COALESCE(r.total_edits, 0)     AS total_edits,
+            COALESCE(c.total_comments, 0)  AS total_comments
+        FROM users u
+        LEFT JOIN (
+            SELECT created_by AS user_id, COUNT(*) AS pages_created
+            FROM pages
+            GROUP BY created_by
+        ) p ON u.user_id = p.user_id
+        LEFT JOIN (
+            SELECT author_id AS user_id, COUNT(*) AS total_edits
+            FROM revisions
+            GROUP BY author_id
+        ) r ON u.user_id = r.user_id
+        LEFT JOIN (
+            SELECT user_id, COUNT(*) AS total_comments
+            FROM comments
+            GROUP BY user_id
+        ) c ON u.user_id = c.user_id
+        WHERE u.user_id = :id
+        LIMIT 1
+    ");
+    $stmt->execute(['id' => $userId]);
+    $profileUser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$profileUser) {
+        http_response_code(404);
+        require __DIR__ . '/../views/404.php';
+        exit;
+    }
+
+    require __DIR__ . '/../views/user/profile.php';
+    exit;
+}
+
+
 // Kategoria - lista stron
 if (preg_match('~^/category/(\d+)$~', $uri, $matches)) {
     $categoryId = (int)$matches[1];

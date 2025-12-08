@@ -3,6 +3,11 @@
 require_once __DIR__ . '/../models/ExternalLink.php';
 $linkModel = new ExternalLink();
 $externalLinks = $linkModel->getRecent(3);
+
+// Pobierz ostatnio edytowane strony
+require_once __DIR__ . '/../models/Page.php';
+$pageModel = new Page();
+$recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +40,10 @@ $externalLinks = $linkModel->getRecent(3);
             </div>
 
             <div class="home-actions">
-                <a href="/page/new" class="btn">➕ Utwórz nową stronę</a>
+                <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
+    <a href="/page/new" class="btn">➕ Utwórz nową stronę</a>
+<?php endif; ?>
+
                 <a href="/categories" class="btn-outline">
                     <span>📂 Przeglądaj kategorie</span>
                 </a>
@@ -45,8 +53,9 @@ $externalLinks = $linkModel->getRecent(3);
             </div>
         </div>
 
+        <!-- TRZY KOLUMNY -->
         <div class="home-layout">
-            <!-- Lewa kolumna: ostatnie strony -->
+            <!-- Kolumna 1: ostatnio odwiedzane -->
             <div class="home-main">
                 <section class="home-sidebar-section home-sidebar-section-main">
                     <header class="home-section-header">
@@ -83,7 +92,43 @@ $externalLinks = $linkModel->getRecent(3);
                 </section>
             </div>
 
-            <!-- Prawa kolumna: tylko zewnętrzne linki -->
+            <!-- Kolumna 2: ostatnio edytowane -->
+<aside class="home-middle">
+    <section class="home-sidebar-section home-sidebar-section-main">
+        <header class="home-section-header">
+            <h2 class="home-section-title">Ostatnio zaktualizowane strony</h2>
+            <a href="/pages" class="home-section-link">
+                Zobacz wszystkie
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </header>
+
+        <?php if (empty($recentlyEdited)): ?>
+            <p class="info">Brak ostatnio edytowanych stron.</p>
+        <?php else: ?>
+            <ul class="page-list">
+                <?php foreach ($recentlyEdited as $page): ?>
+                    <li class="page-list-item">
+                        <a href="/page/<?= htmlspecialchars($page['slug']) ?>" class="page-list-item-link">
+                            <div class="page-list-item-title">
+                                <?= htmlspecialchars($page['title']) ?>
+                            </div>
+                            <span class="page-list-item-meta">
+                                Edytował: <?= htmlspecialchars($page['author'] ?? 'Nieznany') ?> |
+                                <?= date('d.m.Y H:i', strtotime($page['last_modified'])) ?>
+                            </span>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
+</aside>
+
+
+            <!-- Kolumna 3: z zewnątrz -->
             <aside>
                 <section class="home-sidebar-section">
                     <div class="home-sidebar-title">🌐 Z zewnątrz</div>

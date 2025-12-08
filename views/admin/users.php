@@ -1,3 +1,26 @@
+<?php
+// views/admin/users.php
+
+function getUserBadges(array $user): array
+{
+    $badges   = [];
+    $pages    = (int)($user['pages_created']   ?? 0);
+    $edits    = (int)($user['total_edits']     ?? 0);
+    $comments = (int)($user['total_comments']  ?? 0);
+
+    if ($edits >= 1)  $badges[] = ['label' => '1 edycja',       'color' => 'success'];
+    if ($edits >= 10) $badges[] = ['label' => '10 edycji',      'color' => 'info'];
+    if ($edits >= 50) $badges[] = ['label' => '50 edycji',      'color' => 'warning'];
+
+    if ($pages >= 1)  $badges[] = ['label' => '1 strona',       'color' => 'success'];
+    if ($pages >= 5)  $badges[] = ['label' => '5 stron',        'color' => 'info'];
+
+    if ($comments >= 1)  $badges[] = ['label' => '1 komentarz',    'color' => 'success'];
+    if ($comments >= 50) $badges[] = ['label' => '50 komentarzy',  'color' => 'warning'];
+
+    return $badges;
+}
+?>
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -5,6 +28,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zarządzanie Użytkownikami - Wiki Engine</title>
     <link rel="stylesheet" href="/css/style.css">
+    <?= ThemeLoader::generateCSS() ?>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -18,6 +42,7 @@
             <a href="/admin/users" class="btn active">👥 Użytkownicy</a>
             <a href="/admin/categories" class="btn">📁 Kategorie</a>
             <a href="/admin/customization" class="btn">🎨 Customizacja</a>
+            <a href="/admin/templates" class="btn">🧩 Szablony</a>
         </div>
         
         <?php if (isset($_GET['success'])): ?>
@@ -65,7 +90,7 @@
         
         <div class="admin-section">
             <h2>📋 Lista Użytkowników (<?= count($users) ?>)</h2>
-            
+
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -73,6 +98,8 @@
                         <th>Użytkownik</th>
                         <th>Email</th>
                         <th>Rola</th>
+                        <th>Status</th>
+                        <th>Odznaki</th>
                         <th>Stron</th>
                         <th>Edycji</th>
                         <th>Komentarzy</th>
@@ -89,6 +116,11 @@
                                 <?php if ($user['user_id'] === $_SESSION['user_id']): ?>
                                     <span class="badge-you">TY</span>
                                 <?php endif; ?>
+                                <div>
+                                    <a href="/user/<?= $user['user_id'] ?>" style="font-size:11px; color:#818cf8;">
+                                        👁️ Zobacz profil
+                                    </a>
+                                </div>
                             </td>
                             <td><?= htmlspecialchars($user['email']) ?></td>
                             <td>
@@ -96,15 +128,50 @@
                                     <?= ucfirst($user['role']) ?>
                                 </span>
                             </td>
+                            <td>
+                                <?php if (!empty($user['is_banned'])): ?>
+                                    <span class="badge-status badge-banned">Zbanowany</span>
+                                <?php else: ?>
+                                    <span class="badge-status badge-ok">Aktywny</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php $badges = getUserBadges($user); ?>
+                                <?php if (empty($badges)): ?>
+                                    <span style="color:#6b7280; font-size:11px;">Brak</span>
+                                <?php else: ?>
+                                    <div class="user-badges">
+                                        <?php foreach ($badges as $b): ?>
+                                            <span class="badge badge-<?= htmlspecialchars($b['color']) ?>">
+                                                <?= htmlspecialchars($b['label']) ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td><?= $user['pages_created'] ?></td>
                             <td><?= $user['total_edits'] ?></td>
                             <td><?= $user['total_comments'] ?? 0 ?></td>
                             <td><?= date('d.m.Y', strtotime($user['created_at'])) ?></td>
                             <td>
                                 <?php if ($user['user_id'] !== $_SESSION['user_id']): ?>
+                                    <?php if (empty($user['is_banned'])): ?>
+                                        <a href="/admin/users/ban/<?= $user['user_id'] ?>" 
+                                           class="btn-small btn-danger" 
+                                           onclick="return confirm('Zbanować użytkownika <?= htmlspecialchars($user['username']) ?>?\n\nNie będzie mógł się logować ani dodawać treści.');">
+                                            🚫 Zbanuj
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="/admin/users/unban/<?= $user['user_id'] ?>" 
+                                           class="btn-small"
+                                           onclick="return confirm('Odbanować użytkownika <?= htmlspecialchars($user['username']) ?>?');">
+                                            ✅ Odbanuj
+                                        </a>
+                                    <?php endif; ?>
+
                                     <a href="/admin/users/delete/<?= $user['user_id'] ?>" 
                                        class="btn-small btn-danger" 
-                                       onclick="return confirm('Czy na pewno usunąć użytkownika <?= htmlspecialchars($user['username']) ?>?\n\nUsuniete zostaną:\n- Wszystkie utworzone strony\n- Wszystkie komentarze\n- Cała historia edycji')">
+                                       onclick="return confirm('Czy na pewno usunąć użytkownika <?= htmlspecialchars($user['username']) ?>?\n\nUsunięte zostaną:\n- Wszystkie utworzone strony\n- Wszystkie komentarze\n- Cała historia edycji');">
                                         🗑️ Usuń
                                     </a>
                                 <?php else: ?>

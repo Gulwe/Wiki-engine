@@ -1,43 +1,72 @@
-/* DARK – ciemnozielony */
 html[data-theme="ru"] {
-    --bg-page: #020908;
-    --bg-surface: #05120e;
-    --bg-surface-alt: #071a13;
+    /* Tło strony / głębia */
+    --bg-primary: #050309;
+    --bg-secondary: #0b050f;
+    --bg-page: #050309;
 
-    --card-bg: #071912;
-    --card-bg-soft: #0a2118;
+    /* Powierzchnie / karty – bardziej winne niż „krwiste” */
+    --bg-surface: #110812;
+    --bg-surface-alt: #170d19;
+    --card-bg: #130914;
+    --card-bg-soft: #190e1b;
 
-    --text-primary: #e3f9f0;
-    --text-secondary: #c0e6d5;
-    --text-muted: #7fb5a0;
+    /* Tekst – mniej różu, bardziej neutralny jasny */
+    --text-primary: #f4f4fb;      /* prawie biały z lekkim fioletem */
+    --text-secondary: #e5cdd5;    /* delikatny róż/beż */
+    --text-muted: #a27a87;        /* stonowany róż/brąz */
 
-    --accent-main: #2f9e69;
-    --accent-main-soft: #248256;
-    --accent-strong: #1a6140;
+    /* Akcenty – ciemniejsze czerwienie, bez „neonów” */
+    --accent-main: #dc2626;       /* ciemniejszy czerwony */
+    --accent-main-soft: #b91c1c;
+    --accent-strong: #7f1d1d;
+    --accent-secondary: #f97373;  /* tylko do podkreśleń, nie jako tło */
 
-    --border-subtle: #113326;
-    --border-strong: #1c4532;
+    /* Ramki / granice */
+    --border-subtle: #2a1116;
+    --border-strong: #5b1b21;
 
-    --input-bg: #04100c;
-    --input-border: #113326;
-    --input-border-focus: #2f9e69;
+    /* Pola formularzy */
+    --input-bg: #0c060f;
+    --input-border: #2a1116;
+    --input-border-focus: #dc2626;
 
+    /* Cienie */
     --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.5);
     --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.6);
 
-    --success-bg: #052215;
+    /* Stany – lekko przygaszone, ale czytelne */
+    --success-bg: #04140b;
     --success-border: #22c55e;
     --success-text: #bbf7d0;
 
-    --error-bg: #2b1114;
+    --error-bg: #2a0c10;
     --error-border: #f97373;
-    --error-text: #fecaca;
+    --error-text: #fee2e2;
 
-    --warning-bg: #2a210b;
+    --warning-bg: #241709;
     --warning-border: #fbbf24;
     --warning-text: #fef3c7;
 
-    --info-bg: #041b1e;
-    --info-border: #22c1c3;
-    --info-text: #a5f3fc;
+    --info-bg: #091322;
+    --info-border: #3b82f6;
+    --info-text: #bfdbfe;
+
+    /* Przyciski / badge */
+    --btn-primary-bg: linear-gradient(135deg, #7f1d1d, #dc2626);
+    --btn-primary-border: #f97373;
+
+    --btn-secondary-bg: rgba(63, 24, 32, 0.5);
+    --btn-secondary-border: #5b1b21;
+
+    --badge-admin-bg: linear-gradient(135deg, #b91c1c, #7f1d1d);
+    --badge-editor-bg: linear-gradient(135deg, #ef4444, #b91c1c);
+    --badge-viewer-bg: rgba(75, 85, 99, 0.6);
+
+    /* Progress / timeline / dekoracje */
+    --progress-bg: #110812;
+    --progress-fill: linear-gradient(90deg, #7f1d1d, #dc2626);
+
+    /* Linki – lekko rozjaśnione, ale nie jaskrawe */
+    --link-color: #fca5a5;
+    --link-hover: #fee2e2;
 }
