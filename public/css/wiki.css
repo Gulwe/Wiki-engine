@@ -465,28 +465,39 @@ ol li::marker {
 /* BREADCRUMBS WIKI */
 
 .breadcrumbs {
-    padding: 10px 0;
-    font-size: 13px;
-    color: var(--text-muted);
+    background: var(--card-bg);
+    padding: 15px 30px;
+    border-radius: 12px;
+    margin: 20px auto;
+    max-width: 1200px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .breadcrumbs a {
-    color: var(--accent-main);
+    color: var(--accent-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
 }
 
 .breadcrumbs a:hover {
-    color: var(--accent-main-soft);
+    color: var(--link-hover);
 }
 
 .breadcrumbs .separator {
-    margin: 0 6px;
     color: var(--text-muted);
+    opacity: 0.6;
 }
 
 .breadcrumbs .current {
     color: var(--text-secondary);
     font-weight: 600;
 }
+
 
 /* RELATED PAGES WIKI */
 
@@ -601,6 +612,196 @@ ol li::marker {
     flex-wrap: wrap;
     gap: 8px;
 }
+
+/* ===== INFOBOX (SZABLONY POSTACI) ===== */
+
+.infobox {
+    position: relative;  /* ZMIENIONE z float */
+    float: right;
+    width: 300px;
+    max-width: 100%;
+    margin: 0 0 20px 20px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+    z-index: 10;  /* DODANE - żeby był nad treścią */
+}
+
+/* Kontener strony musi mieć overflow visible */
+.page-content {
+    position: relative;
+    overflow: visible !important;  /* WAŻNE */
+}
+
+/* Wrapper dla całej zawartości strony z infoboxem */
+.page-content::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.infobox-header {
+    background: linear-gradient(135deg, var(--accent-main), var(--accent-strong));
+    color: #ffffff;
+    padding: 14px 16px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.infobox-image {
+    width: 100%;
+    background-color: var(--bg-surface-alt);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.infobox-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.infobox-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.infobox-section:last-child {
+    border-bottom: none;
+}
+
+.infobox-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.infobox-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    flex: 0 0 auto;
+    margin-right: 10px;
+}
+
+.infobox-value {
+    color: var(--text-muted);
+    text-align: right;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.infobox-separator {
+    background-color: var(--bg-surface-alt);
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.infobox-flag {
+    width: 24px;
+    height: auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
+}
+
+.infobox-skills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.infobox-skill-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    /* border: 1px solid var(--border-subtle); */ 
+}
+
+/* Responsywność */
+@media (max-width: 968px) {
+    .infobox {
+        float: none;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto 20px auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .infobox {
+        width: 100%;
+        margin: 0 0 20px 0;
+    }
+}
+
+/* Template error */
+.template-error {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    padding: 12px;
+    color: #ef4444;
+    font-size: 13px;
+    margin: 10px 0;
+}
+
+/* ===== INFOBOX - SEKCJA UMIEJĘTNOŚCI ===== */
+
+.infobox-skills-section {
+    padding: 12px 16px !important;
+}
+
+.infobox-skill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.infobox-skill-row:last-child {
+    border-bottom: none;
+}
+
+.infobox-skill-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.infobox-skill-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    /* border: 1px solid var(--border-subtle); */
+    object-fit: contain;
+}
+
+/* Ikona w sekcji Nacja */
+.infobox-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+/*     border: 1px solid var(--border-subtle); */
+    object-fit: contain;
+}
+
 
 .page-content {
     margin-top: 10px;
@@ -768,5 +969,110 @@ ol li::marker {
     color: var(--text-muted);
     margin-top: 6px;
 }
+
+/* Wielolinijkowe wartości w infobox */
+.infobox-row-multiline {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 0;
+}
+
+.infobox-multiline-content {
+    padding: 0 12px 8px 12px;
+}
+
+.infobox-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.infobox-list li {
+    padding: 6px 0 6px 20px;
+    position: relative;
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: var(--text-secondary, #e5e7eb);
+}
+
+.infobox-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--accent-primary, #8b5cf6);
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.infobox-row-stacked {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    margin: 4px 8px;
+}
+
+.infobox-row-stacked .infobox-label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+}
+
+.infobox-value-multi {
+    width: 100%;
+    font-size: 0.9em;
+    line-height: 2;
+    color: var(--text-secondary, #e5e7eb);
+    padding-left: 0px;
+    text-align: left;
+}
+
+.infobox-value-multi br {
+    display: block;
+    content: "";
+    margin: 2px 0;
+}
+
+/* Opcja 2: Z ikonkami "→" */
+.infobox-value-multi-icon {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.infobox-value-multi-icon .multi-line-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(139, 92, 246, 0.05);
+    border-radius: 6px;
+    border-left: 2px solid rgba(139, 92, 246, 0.3);
+    transition: all 0.2s ease;
+}
+
+.infobox-value-multi-icon .multi-line-item:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-left-color: rgba(139, 92, 246, 0.6);
+    transform: translateX(4px);
+}
+
+.infobox-value-multi-icon .multi-line-item::before {
+    content: '→';
+    color: var(--accent-primary, #8b5cf6);
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.infobox-empty {
+    color: var(--text-muted, #6b7280);
+    font-style: italic;
+}
+
 
 

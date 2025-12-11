@@ -15,7 +15,7 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
     <title><?= htmlspecialchars($siteName) ?></title>
 
     <!-- CSS w kolejności: base → komponenty → layout → wiki → admin → motywy -->
-     <link rel="stylesheet" href="/css/base.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/base.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/css/components.css?v=<?= time() ?>"> 
     <link rel="stylesheet" href="/css/layout.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/css/wiki.css?v=<?= time() ?>">
@@ -59,16 +59,6 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
 
         <!-- Navigation -->
         <nav class="main-nav">
-<!--            <a href="/" class="nav-item">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-text">Strona główna</span>
-            </a> -->
-
-        <!--    <a href="/categories" class="nav-item">
-                <span class="nav-icon">📁</span>
-                <span class="nav-text">Kategorie</span>
-            </a> -->
-
             <?php if (isset($_SESSION['user_id'])): ?>
                 <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
                     <a href="/page/new" class="nav-item nav-highlight">
@@ -85,13 +75,11 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
                         <span class="dropdown-arrow">▼</span>
                     </button>
                     
-
-
                     <div class="dropdown-menu">
-                 <a href="/categories" class="dropdown-item">
-                <span class="dropdown-icon">📁</span>
-                Kategorie
-            </a>
+                        <a href="/categories" class="dropdown-item">
+                            <span class="dropdown-icon">📁</span>
+                            Kategorie
+                        </a>
                         <a href="/media" class="dropdown-item">
                             <span class="dropdown-icon">🖼️</span>
                             Galeria
@@ -152,7 +140,7 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
                     <img src="/symbols/AM.png" alt="Theme" id="current-theme-icon">
                 </button>
                 <div class="theme-dropdown" id="theme-dropdown">
-                                    <div class="theme-option" data-theme="default">
+                    <div class="theme-option" data-theme="default">
                         <img src="/symbols/soslogo.png" alt="Default">
                         <span>SoS</span>
                     </div>
@@ -213,7 +201,9 @@ $(document).ready(function() {
         $('.main-nav').toggleClass('mobile-active');
     });
 
-    // Custom Theme Switcher
+    // ========================================
+    // === CUSTOM THEME SWITCHER ===
+    // ========================================
     const themeSelectorBtn = document.getElementById('theme-selector-btn');
     const themeDropdown = document.getElementById('theme-dropdown');
     const currentThemeIcon = document.getElementById('current-theme-icon');
@@ -228,22 +218,60 @@ $(document).ready(function() {
         'am': '/symbols/AM.png'
     };
 
+    // Funkcja ustawiająca cookie
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+    }
+
+    // Funkcja odczytująca cookie
+    function getCookie(name) {
+        const nameEQ = name + '=';
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
     // Funkcja aplikująca motyw
-    function applyTheme(theme) {
+    function applyTheme(theme, reload = false) {
+        console.log('Applying theme:', theme);
+        
+        // Ustaw atrybut data-theme
         if (theme === 'default') {
             document.documentElement.removeAttribute('data-theme');
         } else {
             document.documentElement.setAttribute('data-theme', theme);
         }
+        
+        // Zapisz do localStorage (dla JS)
         localStorage.setItem(THEME_KEY, theme);
-
+        
+        // Zapisz do cookie (dla PHP)
+        setCookie('theme', theme, 365); // 1 rok
+        
         // Zmień ikonkę w przycisku
         currentThemeIcon.src = themeIcons[theme] || themeIcons['default'];
+        
+        console.log('Cookie set:', getCookie('theme'));
+        
+        // Przeładuj stronę aby załadować nowe tło
+        if (reload) {
+            console.log('Reloading page...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
+        }
     }
 
-    // Przy ładowaniu strony
-    const savedTheme = localStorage.getItem(THEME_KEY) || 'default';
-    applyTheme(savedTheme);
+    // Przy ładowaniu strony - sprawdź zapisany motyw
+    let savedTheme = getCookie('theme') || localStorage.getItem(THEME_KEY) || 'default';
+    console.log('Saved theme on load:', savedTheme);
+    applyTheme(savedTheme, false); // Nie przeładowuj przy pierwszym załadowaniu
 
     // Toggle dropdown
     themeSelectorBtn.addEventListener('click', function(e) {
@@ -260,7 +288,9 @@ $(document).ready(function() {
     themeOptions.forEach(option => {
         option.addEventListener('click', function() {
             const theme = this.getAttribute('data-theme');
-            applyTheme(theme);
+            console.log('Theme selected:', theme);
+            
+            applyTheme(theme, true); // Przeładuj stronę
             themeDropdown.classList.remove('active');
         });
     });

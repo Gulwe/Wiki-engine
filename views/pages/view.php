@@ -15,6 +15,8 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
     <!-- Główny CSS + motyw -->
     <link rel="stylesheet" href="/css/style.css?v=<?= time() ?>">
     <?= ThemeLoader::generateCSS(); ?>
+     <!-- GLOBALNE TŁO -->
+    <?php include __DIR__ . '/../partials/background.php'; ?>
 </head>
 <body>
 

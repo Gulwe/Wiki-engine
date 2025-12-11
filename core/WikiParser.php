@@ -292,6 +292,7 @@ private function parseYouTube(string $content): string {
         $content = $this->parseCode($content);
 
         // 2. Struktury / bloki
+        $content = $this->parseInfobox($content);  // <--- DODANE: parsuj infobox NAJPIERW
         $content = $this->parseTemplates($content);
         $content = $this->parseAlerts($content);
         $content = $this->parseAccordion($content);
@@ -795,4 +796,320 @@ private function parseInline(string $content): string {
         $text = trim($text, '-');
         return $text;
     }
+    
+        // === INFOBOX / SZABLONY ===
+private function parseInfobox(string $content): string
+{
+    // Regex dla infobox (lazy matching + multiline)
+    $pattern = '/\{\{infobox-postac\s*(.*?)\}\}/is';
+
+    return preg_replace_callback($pattern, function ($matches) {
+        $paramsRaw = $matches[1];
+
+        // Parsuj parametry - POPRAWIONE dla wielolinijkowych wartości
+        $params = [];
+        
+        // Regex który łapie parametr | key = value (może być w wielu liniach)
+        // Używamy pozytywnego lookahead aby zatrzymać się przed następnym |
+        preg_match_all('/\|\s*([a-z_]+)\s*=\s*((?:(?!\|\s*[a-z_]+\s*=).)*)/is', $paramsRaw, $paramMatches, PREG_SET_ORDER);
+        
+        foreach ($paramMatches as $match) {
+            $key = trim($match[1]);
+            $value = trim($match[2]);
+            
+            // Usuń zbędne białe znaki ale zachowaj nowe linie
+            $value = preg_replace('/\s+/u', ' ', $value);
+            
+            $params[$key] = $value;
+        }
+
+        return $this->renderInfoboxPostac($params);
+    }, $content);
+}
+
+
+    // === PARSUJ PARAMETRY SZABLONU ===
+    private function parseTemplateParams(string $paramsString): array {
+        $params = [];
+        $lines = explode("\n", $paramsString);
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line) || $line[0] !== '|') {
+                continue;
+            }
+            
+            // Usuń początkowy |
+            $line = substr($line, 1);
+            
+            // Podziel na klucz = wartość
+            $parts = explode('=', $line, 2);
+            if (count($parts) === 2) {
+                $key = trim($parts[0]);
+                $value = trim($parts[1]);
+                $params[$key] = $value;
+            }
+        }
+        
+        return $params;
+    }
+
+
+// === RENDER: INFOBOX POSTAĆ ===
+private function renderInfoboxPostac(array $params): string {
+    $imie = htmlspecialchars($params['imie'] ?? 'Nieznana postać');
+    $zdjecie = htmlspecialchars($params['zdjecie'] ?? '');
+    $wiek = htmlspecialchars($params['wiek'] ?? '-');
+    $pochodzenie = htmlspecialchars($params['pochodzenie'] ?? '');
+    $pochodzenieFlag = $params['pochodzenie_flaga'] ?? '';
+    $dubbing = htmlspecialchars($params['dubbing'] ?? '-');
+    $nacja = $params['nacja'] ?? '';
+    $nacjaAlt = htmlspecialchars($params['nacja_alt'] ?? 'Nacja');
+    $stopien = $params['stopien'] ?? '-'; // Nie escapuj jeszcze
+    $profesja = htmlspecialchars($params['profesja'] ?? '-');
+    
+    // Umiejętności
+    $zolnierz = $params['zolnierz'] ?? '';
+    $inzynier = $params['inzynier'] ?? '';
+    $mechanik = $params['mechanik'] ?? '';
+    $naukowiec = $params['naukowiec'] ?? '';
+    
+    // Formatuj stopień - zamień - na <br> i dodaj listę
+    $stopienFormatted = $this->formatMultilineField($stopien);
+    
+    $html = '<div class="infobox infobox-postac">';
+    
+    // Nagłówek
+    $html .= '<div class="infobox-header">' . $imie . '</div>';
+    
+    // Zdjęcie
+    if (!empty($zdjecie)) {
+        $html .= '<div class="infobox-image">';
+        $html .= '<img src="' . htmlspecialchars($zdjecie) . '" alt="' . $imie . '">';
+        $html .= '</div>';
+    }
+    
+    // Podstawowe informacje
+    $html .= '<div class="infobox-section">';
+    
+    // Wiek
+    $html .= '<div class="infobox-row">';
+    $html .= '<span class="infobox-label">Wiek:</span> ';
+    $html .= '<span class="infobox-value">' . htmlspecialchars($wiek) . '</span>';
+    $html .= '</div>';
+    
+    // Pochodzenie z flagą
+    $html .= '<div class="infobox-row">';
+    $html .= '<span class="infobox-label">Pochodzenie:</span> ';
+    $html .= '<span class="infobox-value">';
+    if (!empty($pochodzenieFlag)) {
+        $flagSrc = $this->generateFlagSrc($pochodzenieFlag);
+        $html .= '<img src="' . $flagSrc . '" alt="' . htmlspecialchars($pochodzenie) . '" class="infobox-flag"> ';
+    }
+    $html .= htmlspecialchars($pochodzenie);
+    $html .= '</span>';
+    $html .= '</div>';
+    
+    // Dubbing
+    $html .= '<div class="infobox-row">';
+    $html .= '<span class="infobox-label">Dubbing:</span> ';
+    $html .= '<span class="infobox-value">' . htmlspecialchars($dubbing) . '</span>';
+    $html .= '</div>';
+    
+    $html .= '</div>';
+    
+    // Separator
+    $html .= '<div class="infobox-separator">Informacje</div>';
+    
+    // Informacje wojskowe
+    $html .= '<div class="infobox-section">';
+    
+    // Nacja
+    if (!empty($nacja)) {
+        $html .= '<div class="infobox-row">';
+        $html .= '<span class="infobox-label">Nacja:</span> ';
+        $html .= '<span class="infobox-value">';
+        $html .= '<img src="/symbols/' . htmlspecialchars($nacja) . '.png" alt="' . $nacjaAlt . '" class="infobox-icon"> ';
+        $html .= $nacjaAlt;
+        $html .= '</span>';
+        $html .= '</div>';
+    }
+    
+// Stopień - wielolinijkowy
+$stopienFormatted = $this->formatMultilineField($stopien);
+
+// Sprawdź czy zawiera <br> (wieloliniowy)
+if (strpos($stopienFormatted, '<br>') !== false) {
+    $html .= '<div class="infobox-row infobox-row-stacked">';
+    $html .= '<span class="infobox-label">Stopień:</span>';
+    $html .= '<div class="infobox-value-multi">' . $stopienFormatted . '</div>';
+    $html .= '</div>';
+} else {
+    $html .= '<div class="infobox-row">';
+    $html .= '<span class="infobox-label">Stopień:</span> ';
+    $html .= '<span class="infobox-value">' . $stopienFormatted . '</span>';
+    $html .= '</div>';
+}
+
+
+
+    
+    // Profesja
+    $html .= '<div class="infobox-row">';
+    $html .= '<span class="infobox-label">Profesja:</span> ';
+    $html .= '<span class="infobox-value">' . htmlspecialchars($profesja) . '</span>';
+    $html .= '</div>';
+    
+    $html .= '</div>';
+    
+    // Umiejętności (bez zmian)
+    $html .= '<div class="infobox-separator">Umiejętności początkowe</div>';
+    $html .= '<div class="infobox-section infobox-skills-section">';
+    
+    if (!empty($zolnierz)) {
+        $html .= '<div class="infobox-skill-row">';
+        $html .= '<span class="infobox-skill-label">Żołnierz:</span>';
+        $html .= '<img src="/symbols/' . htmlspecialchars($zolnierz) . '.png" alt="Żołnierz" class="infobox-skill-icon">';
+        $html .= '</div>';
+    }
+    
+    if (!empty($inzynier)) {
+        $html .= '<div class="infobox-skill-row">';
+        $html .= '<span class="infobox-skill-label">Inżynier:</span>';
+        $html .= '<img src="/symbols/' . htmlspecialchars($inzynier) . '.png" alt="Inżynier" class="infobox-skill-icon">';
+        $html .= '</div>';
+    }
+    
+    if (!empty($mechanik)) {
+        $html .= '<div class="infobox-skill-row">';
+        $html .= '<span class="infobox-skill-label">Mechanik:</span>';
+        $html .= '<img src="/symbols/' . htmlspecialchars($mechanik) . '.png" alt="Mechanik" class="infobox-skill-icon">';
+        $html .= '</div>';
+    }
+    
+    if (!empty($naukowiec)) {
+        $html .= '<div class="infobox-skill-row">';
+        $html .= '<span class="infobox-skill-label">Naukowiec:</span>';
+        $html .= '<img src="/symbols/' . htmlspecialchars($naukowiec) . '.png" alt="Naukowiec" class="infobox-skill-icon">';
+        $html .= '</div>';
+    }
+    
+    $html .= '</div>';
+    $html .= '</div>';
+    
+    return $html;
+}
+
+/**
+ * Sprawdź czy pole jest wielolinijkowe
+ */
+private function isMultilineField($value) {
+    return !empty($value) && $value !== '-' && preg_match('/^\s*-/m', $value);
+}
+
+
+/**
+ * Formatuj wielolinijkowe pole (zamienia - na bullet points)
+ */
+private function formatMultilineField($value) {
+    if (empty($value) || $value === '-') {
+        return '<span class="infobox-empty">-</span>';
+    }
+    
+    // Usuń znaki nowej linii i zbędne spacje
+    $value = preg_replace('/\s+/', ' ', trim($value));
+    
+    // Podziel przez " - " (spacja-myślnik-spacja)
+    $parts = preg_split('/\s+-\s+/', $value, -1, PREG_SPLIT_NO_EMPTY);
+    
+    if (count($parts) <= 1) {
+        // Jeśli tylko jedna część, zwróć jako zwykły tekst
+        return htmlspecialchars($value);
+    }
+    
+    // Zwróć jako tekst z <br>
+    $lines = [];
+    foreach ($parts as $part) {
+        $part = trim($part);
+        if (!empty($part)) {
+            $lines[] = htmlspecialchars($part);
+        }
+    }
+    
+    return implode('<br>', $lines);
+}
+
+
+
+
+// === HELPER: Generuj URL flagi ===
+private function generateFlagSrc(string $code): string {
+    // Jeśli to dwuliterowy kod ISO
+    if (strlen($code) === 2 && ctype_alpha($code)) {
+        $codeLC = strtolower($code);
+        return "https://flagcdn.com/w40/{$codeLC}.png";
+    }
+    
+    // W przeciwnym razie lokalna flaga
+    return "/symbols/{$code}.png";
+}
+
+
+
+    // === RENDER: INFOBOX JEDNOSTKA ===
+    private function renderInfoboxJednostka(array $params): string {
+        $nazwa = htmlspecialchars($params['nazwa'] ?? 'Nieznana jednostka');
+        $obrazek = htmlspecialchars($params['obrazek'] ?? '');
+        $typ = htmlspecialchars($params['typ'] ?? '-');
+        $koszt = htmlspecialchars($params['koszt'] ?? '-');
+        $hp = htmlspecialchars($params['hp'] ?? '-');
+        $atak = htmlspecialchars($params['atak'] ?? '-');
+        $pancerz = htmlspecialchars($params['pancerz'] ?? '-');
+        
+        $html = '<div class="infobox infobox-jednostka">';
+        $html .= '<div class="infobox-header">' . $nazwa . '</div>';
+        
+        if (!empty($obrazek)) {
+            $html .= '<div class="infobox-image">';
+            $html .= '<img src="' . $obrazek . '" alt="' . $nazwa . '">';
+            $html .= '</div>';
+        }
+        
+        $html .= '<div class="infobox-section">';
+        $html .= '<div class="infobox-row"><span class="infobox-label">Typ:</span> <span class="infobox-value">' . $typ . '</span></div>';
+        $html .= '<div class="infobox-row"><span class="infobox-label">Koszt:</span> <span class="infobox-value">' . $koszt . '</span></div>';
+        $html .= '<div class="infobox-row"><span class="infobox-label">HP:</span> <span class="infobox-value">' . $hp . '</span></div>';
+        $html .= '<div class="infobox-row"><span class="infobox-label">Atak:</span> <span class="infobox-value">' . $atak . '</span></div>';
+        $html .= '<div class="infobox-row"><span class="infobox-label">Pancerz:</span> <span class="infobox-value">' . $pancerz . '</span></div>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
+        return $html;
+    }
+
+    // === RENDER: INFOBOX BUDYNEK ===
+    private function renderInfoboxBudynek(array $params): string {
+        $nazwa = htmlspecialchars($params['nazwa'] ?? 'Nieznany budynek');
+        $obrazek = htmlspecialchars($params['obrazek'] ?? '');
+        
+        $html = '<div class="infobox infobox-budynek">';
+        $html .= '<div class="infobox-header">' . $nazwa . '</div>';
+        
+        if (!empty($obrazek)) {
+            $html .= '<div class="infobox-image">';
+            $html .= '<img src="' . $obrazek . '" alt="' . $nazwa . '">';
+            $html .= '</div>';
+        }
+        
+        $html .= '<div class="infobox-section">';
+        $html .= '<p style="color: var(--text-muted); font-size: 12px; text-align: center;">Szablon w budowie</p>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
+        return $html;
+    }
+
+    
 }

@@ -18,6 +18,8 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
     <title><?= htmlspecialchars(ThemeLoader::get('site_name', 'Wiki Engine')) ?> - Strona Główna</title>
     <link rel="stylesheet" href="/css/style.css">
     <?= ThemeLoader::generateCSS() ?>
+    <!-- GLOBALNE TŁO -->
+    <?php include __DIR__ . '/partials/background.php'; ?>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -41,8 +43,8 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
 
             <div class="home-actions">
                 <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
-    <a href="/page/new" class="btn">➕ Utwórz nową stronę</a>
-<?php endif; ?>
+                    <a href="/page/new" class="btn">➕ Utwórz nową stronę</a>
+                <?php endif; ?>
 
                 <a href="/categories" class="btn-outline">
                     <span>📂 Przeglądaj kategorie</span>
@@ -93,42 +95,41 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
             </div>
 
             <!-- Kolumna 2: ostatnio edytowane -->
-<aside class="home-middle">
-    <section class="home-sidebar-section home-sidebar-section-main">
-        <header class="home-section-header">
-            <h2 class="home-section-title">Ostatnio zaktualizowane strony</h2>
-            <a href="/pages" class="home-section-link">
-                Zobacz wszystkie
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-            </a>
-        </header>
-
-        <?php if (empty($recentlyEdited)): ?>
-            <p class="info">Brak ostatnio edytowanych stron.</p>
-        <?php else: ?>
-            <ul class="page-list">
-                <?php foreach ($recentlyEdited as $page): ?>
-                    <li class="page-list-item">
-                        <a href="/page/<?= htmlspecialchars($page['slug']) ?>" class="page-list-item-link">
-                            <div class="page-list-item-title">
-                                <?= htmlspecialchars($page['title']) ?>
-                            </div>
-                            <span class="page-list-item-meta">
-                                Edytował: <?= htmlspecialchars($page['author'] ?? 'Nieznany') ?> |
-                                <?= date('d.m.Y H:i', strtotime($page['last_modified'])) ?>
-                            </span>
+            <aside class="home-middle">
+                <section class="home-sidebar-section home-sidebar-section-main">
+                    <header class="home-section-header">
+                        <h2 class="home-section-title">Ostatnio zaktualizowane strony</h2>
+                        <a href="/pages" class="home-section-link">
+                            Zobacz wszystkie
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
                         </a>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </section>
-</aside>
+                    </header>
 
+                    <?php if (empty($recentlyEdited)): ?>
+                        <p class="info">Brak ostatnio edytowanych stron.</p>
+                    <?php else: ?>
+                        <ul class="page-list">
+                            <?php foreach ($recentlyEdited as $page): ?>
+                                <li class="page-list-item">
+                                    <a href="/page/<?= htmlspecialchars($page['slug']) ?>" class="page-list-item-link">
+                                        <div class="page-list-item-title">
+                                            <?= htmlspecialchars($page['title']) ?>
+                                        </div>
+                                        <span class="page-list-item-meta">
+                                            Edytował: <?= htmlspecialchars($page['author'] ?? 'Nieznany') ?> |
+                                            <?= date('d.m.Y H:i', strtotime($page['last_modified'])) ?>
+                                        </span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </section>
+            </aside>
 
-            <!-- Kolumna 3: z zewnątrz -->
+            <!-- Kolumna 3: z zewnątrz + Discord -->
             <aside>
                 <section class="home-sidebar-section">
                     <div class="home-sidebar-title">🌐 Z zewnątrz</div>
@@ -146,9 +147,6 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
                                         <?php if (!empty($link['thumbnail'])): ?>
                                             <img src="<?= htmlspecialchars($link['thumbnail']) ?>" 
                                                  alt="<?= htmlspecialchars($link['title']) ?>">
-                                            <div class="external-link-play">
-                                                <div class="external-link-play-icon"></div>
-                                            </div>
                                         <?php else: ?>
                                             <div class="external-link-placeholder">
                                                 🔗
@@ -189,6 +187,16 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
                             Brak zewnętrznych linków.
                         </p>
                     <?php endif; ?>
+
+                    <!-- Discord widget -->
+                    <div class="discord-widget">
+                        <iframe
+                            src="https://discord.com/widget?id=1120738124276977745&theme=dark"
+                            allowtransparency="true"
+                            frameborder="0"
+                            sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
+                        </iframe>
+                    </div>
                 </section>
             </aside>
         </div>

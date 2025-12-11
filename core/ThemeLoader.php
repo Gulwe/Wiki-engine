@@ -37,10 +37,10 @@ class ThemeLoader {
 <style id='dynamic-theme'>
 :root {
     /* Bridge między ustawieniami w panelu a systemem motywów */
-    --accent-primary:  {$primaryColor};
+    /* --accent-primary:  {$primaryColor};
     --accent-secondary:{$secondaryColor};
     --bg-primary:      {$backgroundColor};
-    --header-bg:       {$headerColor};
+    --header-bg:       {$headerColor}; */
 }
 
 /* Tło strony – reszta gradientu może być nadal z motywu */

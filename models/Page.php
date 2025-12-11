@@ -34,20 +34,66 @@ class Page {
         return $stmt->fetchAll();
     }
     
-    public function create(string $slug, string $title, int $userId): int {
-        $stmt = $this->db->prepare("
-            INSERT INTO pages (slug, title, created_by)
-            VALUES (:slug, :title, :created_by)
+public function create($title, $slug, $content, $author)
+{
+    $db = Database::getInstance()->getConnection();
+    
+    try {
+        $db->beginTransaction();
+        
+        // 1. Utwórz stronę (bez contentu)
+        $stmt = $db->prepare("
+            INSERT INTO pages (title, slug, created_by, created_at, updated_at)
+            VALUES (:title, :slug, :author, NOW(), NOW())
         ");
         
         $stmt->execute([
-            'slug' => $slug,
             'title' => $title,
-            'created_by' => $userId
+            'slug' => $slug,
+            'author' => $_SESSION['user_id'] ?? null
         ]);
         
-        return (int)$this->db->lastInsertId();
+        $pageId = $db->lastInsertId();
+        
+        // 2. Utwórz pierwszą rewizję z contentem
+        $stmt = $db->prepare("
+            INSERT INTO revisions (page_id, content, author_id, revision_comment, created_at)
+            VALUES (:page_id, :content, :author_id, :comment, NOW())
+        ");
+        
+        $stmt->execute([
+            'page_id' => $pageId,
+            'content' => $content,
+            'author_id' => $_SESSION['user_id'] ?? null,
+            'comment' => 'Utworzono stronę'
+        ]);
+        
+        $revisionId = $db->lastInsertId();
+        
+        // 3. Zaktualizuj pages.current_revision_id
+        $stmt = $db->prepare("
+            UPDATE pages 
+            SET current_revision_id = :revision_id 
+            WHERE page_id = :page_id
+        ");
+        
+        $stmt->execute([
+            'revision_id' => $revisionId,
+            'page_id' => $pageId
+        ]);
+        
+        $db->commit();
+        
+        return $pageId;
+        
+    } catch (Exception $e) {
+        $db->rollBack();
+        error_log("Error creating page: " . $e->getMessage());
+        return false;
     }
+}
+
+
     
     // Pobierz N ostatnich stron
 public function getRecent($limit = 5) {

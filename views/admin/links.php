@@ -8,6 +8,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zewnętrzne linki - Admin</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .thumbnail-preview {
+            margin-top: 10px;
+            max-width: 200px;
+            border-radius: 8px;
+            border: 2px solid var(--border-subtle);
+        }
+        .thumbnail-cell img {
+            max-width: 80px;
+            max-height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+    </style>
 </head>
 <body>
     <?php include __DIR__ . '/../partials/header.php'; ?>
@@ -36,7 +50,7 @@
         <!-- Formularz dodawania -->
         <div class="admin-section">
             <h3>➕ Dodaj nowy link</h3>
-            <form method="POST" action="/admin/links/add" class="admin-form">
+            <form method="POST" action="/admin/links/add" class="admin-form" enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Tytuł *</label>
@@ -54,7 +68,7 @@
                     </div>
                     <div class="form-group">
                         <label>Ikona</label>
-                        <select name="icon" style="padding:14px;background:rgba(30,0,60,0.5);border:2px solid rgba(139,92,246,0.3);color:#e0e0ff;border-radius:10px;width:100%;font-family:inherit;">
+                        <select name="icon">
                             <option value="🔗">🔗 Link ogólny</option>
                             <option value="🎥">🎥 YouTube</option>
                             <option value="🎮">🎮 ModDB / Gra</option>
@@ -70,6 +84,51 @@
                     <label>Opis (opcjonalnie)</label>
                     <textarea name="description" rows="2" placeholder="Krótki opis..."></textarea>
                 </div>
+                
+                <!-- NOWA SEKCJA: Miniatura -->
+                <div class="form-group">
+                    <label>Miniatura (opcjonalnie)</label>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                        Możesz wgrać plik graficzny lub podać URL do zewnętrznego obrazka
+                    </p>
+                    
+                    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="thumbnail_type" value="upload" checked>
+                            📁 Wgraj plik
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="thumbnail_type" value="url">
+                            🌐 Podaj URL
+                        </label>
+                    </div>
+                    
+                    <div id="upload-section">
+                        <input type="file" 
+                               name="thumbnail_file" 
+                               accept="image/jpeg,image/png,image/gif,image/webp"
+                               onchange="previewThumbnail(this)">
+                        <small style="display: block; margin-top: 4px; color: var(--text-muted);">
+                            Obsługiwane formaty: JPG, PNG, GIF, WebP (max 2MB)
+                        </small>
+                    </div>
+                    
+                    <div id="url-section" style="display: none;">
+                        <input type="url" 
+                               name="thumbnail_url" 
+                               placeholder="https://example.com/image.jpg"
+                               onchange="previewThumbnailUrl(this)">
+                        <small style="display: block; margin-top: 4px; color: var(--text-muted);">
+                            Link do obrazka (np. z YouTube, ModDB, itp.)
+                        </small>
+                    </div>
+                    
+                    <div id="thumbnail-preview" style="margin-top: 12px; display: none;">
+                        <p style="font-size: 12px; font-weight: 600; margin-bottom: 6px;">Podgląd:</p>
+                        <img id="preview-image" class="thumbnail-preview" alt="Podgląd miniatury">
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn">➕ Dodaj link</button>
             </form>
         </div>
@@ -83,6 +142,7 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
+                            <th>Miniatura</th>
                             <th>Ikona</th>
                             <th>Tytuł</th>
                             <th>URL</th>
@@ -97,6 +157,14 @@
                     <tbody>
                         <?php foreach ($links as $link): ?>
                             <tr>
+                                <td class="thumbnail-cell">
+                                    <?php if (!empty($link['thumbnail'])): ?>
+                                        <img src="<?= htmlspecialchars($link['thumbnail']) ?>" 
+                                             alt="<?= htmlspecialchars($link['title']) ?>">
+                                    <?php else: ?>
+                                        <span style="color: var(--text-muted); font-size: 11px;">-</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td style="font-size:24px;"><?= htmlspecialchars($link['icon'] ?? '🔗') ?></td>
                                 <td><strong><?= htmlspecialchars($link['title']) ?></strong></td>
                                 <td>
@@ -145,5 +213,64 @@
             <a href="/admin" class="btn">⬅️ Panel admina</a>
         </div>
     </div>
+
+    <script>
+        // Przełączanie między uploadem a URL
+        document.querySelectorAll('input[name="thumbnail_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const uploadSection = document.getElementById('upload-section');
+                const urlSection = document.getElementById('url-section');
+                const preview = document.getElementById('thumbnail-preview');
+                
+                if (this.value === 'upload') {
+                    uploadSection.style.display = 'block';
+                    urlSection.style.display = 'none';
+                } else {
+                    uploadSection.style.display = 'none';
+                    urlSection.style.display = 'block';
+                }
+                
+                // Ukryj podgląd przy zmianie typu
+                preview.style.display = 'none';
+            });
+        });
+
+        // Podgląd wgranego pliku
+        function previewThumbnail(input) {
+            const preview = document.getElementById('thumbnail-preview');
+            const previewImg = document.getElementById('preview-image');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Podgląd URL
+        function previewThumbnailUrl(input) {
+            const preview = document.getElementById('thumbnail-preview');
+            const previewImg = document.getElementById('preview-image');
+            
+            if (input.value) {
+                previewImg.src = input.value;
+                preview.style.display = 'block';
+                
+                // Ukryj podgląd jeśli obrazek się nie załaduje
+                previewImg.onerror = function() {
+                    preview.style.display = 'none';
+                };
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

@@ -15,7 +15,6 @@ if (!empty($_SESSION['user_id'])) {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($row && !empty($row['is_banned'])) {
-        // wyczyść sesję i przenieś na login z komunikatem
         session_unset();
         session_destroy();
         header('Location: /login?error=banned');
@@ -23,8 +22,7 @@ if (!empty($_SESSION['user_id'])) {
     }
 }
 
-
-// Sprawd藕 tryb maintenance
+// Sprawdź tryb maintenance
 $maintenanceMode = ThemeLoader::get('maintenance_mode', '0');
 if ($maintenanceMode == '1' && (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin')) {
     http_response_code(503);
@@ -39,10 +37,10 @@ if ($maintenanceMode == '1' && (!isset($_SESSION['role']) || $_SESSION['role'] !
     </head>
     <body>
         <div class="container" style="text-align: center; padding: 100px 20px;">
-            <h1 style="font-size: 72px;">馃敡</h1>
+            <h1 style="font-size: 72px;">🔧</h1>
             <h1>Strona w Trybie Konserwacji</h1>
             <p style="font-size: 18px; color: #a78bfa;">
-                Wracamy wkr贸tce! Prowadzimy prace konserwacyjne.
+                Wracamy wkrótce! Prowadzimy prace konserwacyjne.
             </p>
         </div>
     </body>
@@ -51,13 +49,13 @@ if ($maintenanceMode == '1' && (!isset($_SESSION['role']) || $_SESSION['role'] !
     exit;
 }
 
-// Obs艂uga plik贸w statycznych (CSS, JS, obrazki)
+// Obsługa plików statycznych (CSS, JS, obrazki)
 $requestUri = $_SERVER['REQUEST_URI'];
 if (preg_match('/\.(css|js|jpg|jpeg|png|gif|ico|svg|webp)$/', $requestUri)) {
-    return false; // Pozw贸l serwerowi obs艂u偶y膰 plik
+    return false;
 }
 
-// Obs艂uga folder贸w js, css, uploads
+// Obsługa folderów js, css, uploads
 if (preg_match('#^/(js|css|uploads|misc)/#', parse_url($requestUri, PHP_URL_PATH))) {
     return false;
 }
@@ -79,18 +77,16 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Inicjalizacja po艂膮czenia z baz膮
+// Inicjalizacja połączenia z bazą
 Database::getInstance();
 
 // Parser URL
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
-// === ROUTING (KOLEJNO艢膯 MA ZNACZENIE!) ===
+// === ROUTING (KOLEJNOŚĆ MA ZNACZENIE!) ===
 
-
-
-// === DIAGNOSTIC (DODAJ TO) ===
+// === DIAGNOSTIC ===
 if ($uri === '/diagnostic') {
     require __DIR__ . '/../views/diagnostic.php';
     exit;
@@ -175,8 +171,7 @@ if ($uri === '/api/search' && $method === 'GET') {
     exit;
 }
 
-
-// API: Podgl膮d
+// API: Podgląd
 if ($uri === '/api/preview' && $method === 'POST') {
     require_once __DIR__ . '/../core/WikiParser.php';
     $parser = new WikiParser();
@@ -192,15 +187,18 @@ if ($uri === '/page/new') {
         exit;
     }
 
-    // Viewer nie może tworzyć stron
     if ($_SESSION['role'] === 'viewer') {
         header('Location: /?error=forbidden');
         exit;
     }
 
-    $slug = 'new-page-' . time();
+    // Pobierz szablony
+    $db = Database::getInstance()->getConnection();
+    $templates = $db->query("SELECT machine_key, name, content FROM templates WHERE is_active = 1 ORDER BY name")->fetchAll();
+
+    // Pusta strona bez slug
     $page = [
-        'slug'    => $slug,
+        'slug'    => '',  // PUSTY - użytkownik ustawi w formularzu
         'title'   => '',
         'content' => '',
         'page_id' => null,
@@ -210,9 +208,100 @@ if ($uri === '/page/new') {
     exit;
 }
 
+// ZAPISYWANIE NOWEJ STRONY
+if ($uri === '/page/store' && $method === 'POST') {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: /login');
+        exit;
+    }
+
+    if ($_SESSION['role'] === 'viewer') {
+        header('Location: /?error=forbidden');
+        exit;
+    }
+
+    require_once __DIR__ . '/../models/Page.php';
+    $pageModel = new Page();
+
+    $title = trim($_POST['title'] ?? '');
+    $slug = trim($_POST['slug'] ?? '');
+    $content = trim($_POST['content'] ?? '');
+    $comment = trim($_POST['comment'] ?? '');
+    $categories = $_POST['categories'] ?? [];
+
+    // Walidacja
+    if (empty($title) || empty($content)) {
+        $_SESSION['error'] = 'Tytuł i treść są wymagane.';
+        header('Location: /page/new');
+        exit;
+    }
+
+    // Funkcja generowania slug
+    function generateSlug($title) {
+        $polishChars = [
+            'ą' => 'a', 'ć' => 'c', 'ę' => 'e', 'ł' => 'l', 'ń' => 'n',
+            'ó' => 'o', 'ś' => 's', 'ź' => 'z', 'ż' => 'z',
+            'Ą' => 'a', 'Ć' => 'c', 'Ę' => 'e', 'Ł' => 'l', 'Ń' => 'n',
+            'Ó' => 'o', 'Ś' => 's', 'Ź' => 'z', 'Ż' => 'z'
+        ];
+        
+        $slug = strtr($title, $polishChars);
+        $slug = strtolower($slug);
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
+        $slug = preg_replace('/[\s-]+/', '-', $slug);
+        $slug = trim($slug, '-');
+        
+        return empty($slug) ? 'page-' . time() : $slug;
+    }
+
+    // Jeśli slug jest pusty, wygeneruj z tytułu
+    if (empty($slug)) {
+        $slug = generateSlug($title);
+    } else {
+        // Sanitizuj slug
+        $slug = generateSlug($slug);
+    }
+
+    // Sprawdź czy slug już istnieje
+    if ($pageModel->findBySlug($slug)) {
+        $_SESSION['error'] = 'Strona o tym URL już istnieje. Wybierz inny slug.';
+        header('Location: /page/new');
+        exit;
+    }
+
+    $author = $_SESSION['username'] ?? 'Nieznany';
+
+    // Utwórz stronę (metoda create() już tworzy rewizję)
+    $pageId = $pageModel->create($title, $slug, $content, $author);
+
+    if ($pageId) {
+        // Przypisz kategorie
+        if (!empty($categories)) {
+            $db = Database::getInstance()->getConnection();
+            
+            $stmt = $db->prepare("DELETE FROM page_categories WHERE page_id = :page_id");
+            $stmt->execute(['page_id' => $pageId]);
+            
+            $stmt = $db->prepare("INSERT INTO page_categories (page_id, category_id) VALUES (:page_id, :category_id)");
+            foreach ($categories as $categoryId) {
+                $stmt->execute([
+                    'page_id' => $pageId,
+                    'category_id' => $categoryId
+                ]);
+            }
+        }
+
+        $_SESSION['success'] = 'Strona została utworzona!';
+        header('Location: /page/' . $slug);
+    } else {
+        $_SESSION['error'] = 'Błąd podczas tworzenia strony.';
+        header('Location: /page/new');
+    }
+    exit;
+}
 
 
-// Wy艣wietl konkretn膮 rewizj臋
+// Wyświetl konkretną rewizję
 if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
     $slug = $matches[1];
     $revisionId = (int)$matches[2];
@@ -258,14 +347,14 @@ if (preg_match('#^/page/([a-z0-9-]+)/revision/(\d+)$#', $uri, $matches)) {
     exit;
 }
 
-// Przywr贸膰 rewizj臋 (dla admin贸w)
+// Przywróć rewizję (dla adminów)
 if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
     $slug = $matches[1];
     $revisionId = (int)$matches[2];
     
     if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
-        die('403 - Tylko admin mo偶e przywraca膰 rewizje');
+        die('403 - Tylko admin może przywracać rewizje');
     }
     
     $pageModel = new Page();
@@ -300,7 +389,7 @@ if (preg_match('#^/page/([a-z0-9-]+)/restore/(\d+)$#', $uri, $matches)) {
         'page_id' => $page['page_id'],
         'content' => $oldRevision['content'],
         'author_id' => $_SESSION['user_id'],
-        'comment' => 'Przywr贸cono rewizj臋 #' . $revisionId
+        'comment' => 'Przywrócono rewizję #' . $revisionId
     ]);
     
     $newRevisionId = $db->lastInsertId();
@@ -360,9 +449,7 @@ if (preg_match('#^/page/([a-z0-9\-]+)/save$#', $uri, $matches) && $method === 'P
     exit;
 }
 
-
-
-// Edytuj stron臋
+// Edytuj stronę
 if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
     $slug = $matches[1];
     
@@ -382,15 +469,15 @@ if (preg_match('#^/page/([a-z0-9-]+)/edit$#', $uri, $matches)) {
             'page_id' => null
         ];
     }
+    
     $db = Database::getInstance()->getConnection();
-$templates = $db->query("SELECT machine_key, name, content FROM templates WHERE is_active = 1 ORDER BY name")->fetchAll();
-
+    $templates = $db->query("SELECT machine_key, name, content FROM templates WHERE is_active = 1 ORDER BY name")->fetchAll();
 
     require __DIR__ . '/../views/pages/edit.php';
     exit;
 }
 
-// Upload obrazk贸w
+// Upload obrazków
 if ($uri === '/api/upload' && $method === 'POST') {
     header('Content-Type: application/json');
     
@@ -407,7 +494,7 @@ if ($uri === '/api/upload' && $method === 'POST') {
     exit;
 }
 
-// Galeria obrazk贸w
+// Galeria obrazków
 if ($uri === '/media') {
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login');
@@ -426,6 +513,7 @@ if ($uri === '/media') {
     require __DIR__ . '/../views/media.php';
     exit;
 }
+
 
 // Panel Admina - Dashboard
 if ($uri === '/admin') {
@@ -669,30 +757,55 @@ if ($uri === '/admin/templates/add' && $method === 'POST') {
     exit;
 }
 
-// Admin - Zapisz edycję szablonu
-if (preg_match('#^/admin/templates/(\d+)/save$#', $uri, $m) && $method === 'POST') {
-    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { http_response_code(403); exit; }
+// Admin - Zapisz szablon (dodaj nowy LUB edytuj)
+if ($uri === '/admin/templates/save' && $method === 'POST') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        http_response_code(403);
+        exit;
+    }
 
-    $id      = (int)$m[1];
-    $name    = trim($_POST['name'] ?? '');
-    $key     = trim($_POST['machine_key'] ?? '');
+    $templateId = isset($_POST['template_id']) ? (int)$_POST['template_id'] : null;
+    $name = trim($_POST['name'] ?? '');
+    $machineKey = trim($_POST['slug'] ?? ''); // Formularz wysyła 'slug', ale zapisujemy jako 'machine_key'
     $content = $_POST['content'] ?? '';
 
-    if ($name === '' || $key === '' || $content === '') {
-        header('Location: /admin/templates?error=empty');
+    if ($name === '' || $machineKey === '') {
+        header('Location: /admin/templates?error=' . urlencode('Nazwa i klucz są wymagane'));
         exit;
     }
 
     $db = Database::getInstance()->getConnection();
-    $stmt = $db->prepare("
-        UPDATE templates
-        SET name = :name, machine_key = :key, content = :content
-        WHERE template_id = :id
-    ");
-    $stmt->execute(['name' => $name, 'key' => $key, 'content' => $content, 'id' => $id]);
-    header('Location: /admin/templates?success=saved');
+    
+    if ($templateId) {
+        // EDYCJA istniejącego szablonu
+        $stmt = $db->prepare("
+            UPDATE templates
+            SET name = :name, machine_key = :key, content = :content, updated_at = NOW()
+            WHERE template_id = :id
+        ");
+        $stmt->execute([
+            'name' => $name,
+            'key' => $machineKey,
+            'content' => $content,
+            'id' => $templateId
+        ]);
+    } else {
+        // DODAWANIE nowego szablonu
+        $stmt = $db->prepare("
+            INSERT INTO templates (name, machine_key, content, created_at, updated_at)
+            VALUES (:name, :key, :content, NOW(), NOW())
+        ");
+        $stmt->execute([
+            'name' => $name,
+            'key' => $machineKey,
+            'content' => $content
+        ]);
+    }
+    
+    header('Location: /admin/templates?success=1');
     exit;
 }
+
 
 
 
@@ -803,6 +916,52 @@ if ($uri === '/admin/customization/save' && $method === 'POST') {
     header('Location: /admin/customization?success=saved');
     exit;
 }
+
+// ========================================
+// === ADMIN - ZEWNĘTRZNE LINKI ===
+// ========================================
+
+// Lista linków
+if (preg_match('#^/admin/links/?$#', $requestUri)) {
+    require_once __DIR__ . '/../controllers/AdminController.php';
+    $controller = new AdminController();
+    $controller->links();
+    exit;
+}
+
+// Dodaj link (POST)
+if ($requestUri === '/admin/links/add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once __DIR__ . '/../controllers/AdminController.php';
+    $controller = new AdminController();
+    $controller->addLink();
+    exit;
+}
+
+// Usuń link
+if (preg_match('#^/admin/links/delete/(\d+)$#', $requestUri, $matches)) {
+    require_once __DIR__ . '/../controllers/AdminController.php';
+    $controller = new AdminController();
+    $controller->deleteLink($matches[1]);
+    exit;
+}
+
+// Przełącz widoczność
+if (preg_match('#^/admin/links/toggle/(\d+)$#', $requestUri, $matches)) {
+    require_once __DIR__ . '/../controllers/AdminController.php';
+    $controller = new AdminController();
+    $controller->toggleLink($matches[1]);
+    exit;
+}
+
+// Przesuń w górę/dół
+if (preg_match('#^/admin/links/move/(up|down)/(\d+)$#', $requestUri, $matches)) {
+    require_once __DIR__ . '/../controllers/AdminController.php';
+    $controller = new AdminController();
+    $controller->moveLink($matches[2], $matches[1]);
+    exit;
+}
+
+
 
 // Profil użytkownika
 if (preg_match('#^/user/(\d+)$#', $uri, $matches)) {

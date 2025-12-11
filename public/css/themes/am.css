@@ -21,6 +21,7 @@ html[data-theme="am"] {
     --accent-main-soft: #2344c5;
     --accent-strong: #000f5a;
     --accent-secondary: #60a5fa;
+    --header-bg: #5c7aff80;
 
     /* Obramowania – jaœniejsze niebieskie */
     --border-subtle: #1b2b63;

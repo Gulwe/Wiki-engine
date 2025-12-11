@@ -20,6 +20,7 @@ html[data-theme="ru"] {
     --accent-main-soft: #b91c1c;
     --accent-strong: #7f1d1d;
     --accent-secondary: #f97373;  /* tylko do podkreśleń, nie jako tło */
+    --header-bg: #dc262680;
 
     /* Ramki / granice */
     --border-subtle: #2a1116;
@@ -48,8 +49,8 @@ html[data-theme="ru"] {
     --warning-text: #fef3c7;
 
     --info-bg: #091322;
-    --info-border: #3b82f6;
-    --info-text: #bfdbfe;
+    --info-border: #ff5452;
+    --info-text: #ffffff;
 
     /* Przyciski / badge */
     --btn-primary-bg: linear-gradient(135deg, #7f1d1d, #dc2626);

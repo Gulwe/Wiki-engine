@@ -1,10 +1,9 @@
 <?php
 require_once __DIR__ . '/../models/Page.php';
 require_once __DIR__ . '/../models/Settings.php';
-// Jeśli masz model Analytics, odkomentuj:
- require_once __DIR__ . '/../models/Analytics.php';
-// Jeśli chcesz użyć komentarzy w statystykach, możesz też mieć:
- require_once __DIR__ . '/../models/Comment.php';
+require_once __DIR__ . '/../models/Analytics.php';
+require_once __DIR__ . '/../models/Comment.php';
+require_once __DIR__ . '/../models/ExternalLink.php';
 
 class AdminController
 {
@@ -32,10 +31,10 @@ class AdminController
         ];
 
         // Jeśli masz Analytics, możesz dodać więcej:
-        /*
         $analyticsModel = new Analytics();
-        $stats['total_views'] = $analyticsModel->getTotalViews();
-        */
+        if (method_exists($analyticsModel, 'getTotalViews')) {
+            $stats['total_views'] = $analyticsModel->getTotalViews();
+        }
 
         // Ostatnie strony (jeśli masz taką metodę)
         $recentPages = method_exists($pageModel, 'getRecent')
@@ -186,4 +185,225 @@ class AdminController
 
         exit;
     }
+
+    // ========================================
+    // === ZEWNĘTRZNE LINKI ===
+    // ========================================
+
+    /**
+     * Lista wszystkich zewnętrznych linków
+     */
+    public function links()
+    {
+        $this->requireAdmin();
+        
+        $linkModel = new ExternalLink();
+        $links = $linkModel->getAll();
+        
+        require __DIR__ . '/../views/admin/links.php';
+    }
+
+    /**
+     * Dodaj nowy zewnętrzny link
+     */
+    public function addLink()
+    {
+        $this->requireAdmin();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /admin/links');
+            exit;
+        }
+
+        // === DEBUG START ===
+        error_log("=== AdminController::addLink() START ===");
+        error_log("POST: " . print_r($_POST, true));
+        error_log("FILES: " . print_r($_FILES, true));
+        // === DEBUG END ===
+
+        $title = trim($_POST['title'] ?? '');
+        $url = trim($_POST['url'] ?? '');
+        $source = trim($_POST['source'] ?? '');
+        $icon = $_POST['icon'] ?? '🔗';
+        $description = trim($_POST['description'] ?? '');
+        $thumbnailType = $_POST['thumbnail_type'] ?? 'upload';
+        $thumbnail = null;
+
+        error_log("Thumbnail type: " . $thumbnailType);
+
+        if (empty($title) || empty($url)) {
+            error_log("ERROR: Title or URL is empty");
+            header('Location: /admin/links?error=1');
+            exit;
+        }
+
+        $linkModel = new ExternalLink();
+
+        // Obsługa miniatury
+        if ($thumbnailType === 'url') {
+            $thumbnailUrl = trim($_POST['thumbnail_url'] ?? '');
+            error_log("Thumbnail URL from POST: " . $thumbnailUrl);
+            
+            if (!empty($thumbnailUrl)) {
+                $thumbnail = $linkModel->validateThumbnailUrl($thumbnailUrl);
+                error_log("After validateThumbnailUrl: " . ($thumbnail ?? 'NULL'));
+            }
+        } elseif ($thumbnailType === 'upload') {
+            error_log("Attempting file upload...");
+            
+            if (isset($_FILES['thumbnail_file'])) {
+                error_log("File error code: " . $_FILES['thumbnail_file']['error']);
+                error_log("File name: " . ($_FILES['thumbnail_file']['name'] ?? 'NO NAME'));
+                error_log("File size: " . ($_FILES['thumbnail_file']['size'] ?? 0));
+                
+                if ($_FILES['thumbnail_file']['error'] === UPLOAD_ERR_OK) {
+                    $thumbnail = $linkModel->handleThumbnailUpload($_FILES['thumbnail_file']);
+                    error_log("After handleThumbnailUpload: " . ($thumbnail ?? 'NULL'));
+                } else {
+                    error_log("Upload error code: " . $_FILES['thumbnail_file']['error']);
+                }
+            } else {
+                error_log("No 'thumbnail_file' in FILES array");
+            }
+        }
+
+        // Jeśli nie udało się ustawić miniatury, spróbuj auto-wykryć
+        if (empty($thumbnail)) {
+            error_log("Thumbnail is empty, trying auto-detect for URL: " . $url);
+            $thumbnail = $linkModel->getAutoThumbnail($url);
+            error_log("After getAutoThumbnail: " . ($thumbnail ?? 'NULL'));
+        }
+
+        $userId = $_SESSION['user_id'] ?? null;
+        
+        error_log("FINAL THUMBNAIL VALUE BEFORE CREATE: " . ($thumbnail ?? 'NULL'));
+        error_log("User ID: " . ($userId ?? 'NULL'));
+        
+        $result = $linkModel->create($title, $url, $description, $source, $icon, $userId, $thumbnail);
+        
+        error_log("Create result: " . ($result ? 'SUCCESS' : 'FAILED'));
+        error_log("=== AdminController::addLink() END ===");
+
+        header('Location: /admin/links?success=added');
+        exit;
+    }
+
+    /**
+     * Usuń zewnętrzny link
+     */
+    public function deleteLink($linkId)
+    {
+        $this->requireAdmin();
+        
+        $linkModel = new ExternalLink();
+        $linkModel->delete($linkId);
+        
+        header('Location: /admin/links?success=deleted');
+        exit;
+    }
+
+    /**
+     * Przełącz widoczność linku
+     */
+    public function toggleLink($linkId)
+    {
+        $this->requireAdmin();
+        
+        $linkModel = new ExternalLink();
+        $linkModel->toggleVisibility($linkId);
+        
+        header('Location: /admin/links');
+        exit;
+    }
+
+    /**
+     * Przesuń link w górę lub w dół
+     */
+    public function moveLink($linkId, $direction)
+    {
+        $this->requireAdmin();
+        
+        if (!in_array($direction, ['up', 'down'])) {
+            header('Location: /admin/links');
+            exit;
+        }
+        
+        $linkModel = new ExternalLink();
+        $linkModel->move($linkId, $direction);
+        
+        header('Location: /admin/links?success=moved');
+        exit;
+    }
+    
+    // ========================================
+// === SZABLONY ===
+// ========================================
+
+/**
+ * Lista szablonów
+ */
+public function templates()
+{
+    $this->requireAdmin();
+    
+    require_once __DIR__ . '/../models/Template.php';
+    $templateModel = new Template();
+    $templates = $templateModel->getAll();
+    
+    require __DIR__ . '/../views/admin/templates.php';
+}
+
+/**
+ * Zapisz szablon (dodaj nowy lub edytuj istniejący)
+ */
+public function saveTemplate()
+{
+    $this->requireAdmin();
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: /admin/templates');
+        exit;
+    }
+    
+    $templateId = isset($_POST['template_id']) ? (int)$_POST['template_id'] : null;
+    $name = trim($_POST['name'] ?? '');
+    $slug = trim($_POST['slug'] ?? '');
+    $content = $_POST['content'] ?? '';
+    
+    if (empty($name) || empty($slug)) {
+        header('Location: /admin/templates?error=' . urlencode('Nazwa i klucz są wymagane'));
+        exit;
+    }
+    
+    require_once __DIR__ . '/../models/Template.php';
+    $templateModel = new Template();
+    
+    if ($templateId) {
+        // Edycja istniejącego
+        $templateModel->update($templateId, $name, $slug, $content);
+    } else {
+        // Dodaj nowy
+        $templateModel->create($name, $slug, $content);
+    }
+    
+    header('Location: /admin/templates?success=1');
+    exit;
+}
+
+/**
+ * Usuń szablon
+ */
+public function deleteTemplate($templateId)
+{
+    $this->requireAdmin();
+    
+    require_once __DIR__ . '/../models/Template.php';
+    $templateModel = new Template();
+    $templateModel->delete($templateId);
+    
+    header('Location: /admin/templates?success=1');
+    exit;
+}
+
+    
 }

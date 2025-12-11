@@ -21,6 +21,7 @@ html[data-theme="zsi"] {
     --accent-main-soft: #d97706;
     --accent-strong: #b45309;
     --accent-secondary: #fbbf24;
+    --header-bg: #f59e0b80;
 
     /* Obramowania */
     --border-subtle: #3b260c;
