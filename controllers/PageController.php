@@ -14,7 +14,7 @@ public function save(string $slug): void {
     $userId = $_SESSION['user_id'];
     
     if (empty($title) || empty($content)) {
-        header('Location: /pages/' . $slug . '/edit?error=empty');
+        header('Location: /page/' . $slug . '/edit?error=empty');
         exit;
     }
     
@@ -63,7 +63,7 @@ public function save(string $slug): void {
     // Zaktualizuj kategorie
     $this->updateCategories($pageId, $categories);
     
-    header('Location: /pages/' . $slug);
+    header('Location: /page/' . $slug);
 }
 public function create(): void
 {
