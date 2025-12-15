@@ -1,0 +1,43 @@
+/* DARK – ciemnozielony */
+html[data-theme="ru"] {
+    --bg-page: #020908;
+    --bg-surface: #05120e;
+    --bg-surface-alt: #071a13;
+
+    --card-bg: #071912;
+    --card-bg-soft: #0a2118;
+
+    --text-primary: #e3f9f0;
+    --text-secondary: #c0e6d5;
+    --text-muted: #7fb5a0;
+
+    --accent-main: #2f9e69;
+    --accent-main-soft: #248256;
+    --accent-strong: #1a6140;
+
+    --border-subtle: #113326;
+    --border-strong: #1c4532;
+
+    --input-bg: #04100c;
+    --input-border: #113326;
+    --input-border-focus: #2f9e69;
+
+    --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.5);
+    --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.6);
+
+    --success-bg: #052215;
+    --success-border: #22c55e;
+    --success-text: #bbf7d0;
+
+    --error-bg: #2b1114;
+    --error-border: #f97373;
+    --error-text: #fecaca;
+
+    --warning-bg: #2a210b;
+    --warning-border: #fbbf24;
+    --warning-text: #fef3c7;
+
+    --info-bg: #041b1e;
+    --info-border: #22c1c3;
+    --info-text: #a5f3fc;
+}

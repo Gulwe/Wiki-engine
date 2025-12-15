@@ -1,14 +1,3 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admina - Wiki Engine</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <?php include __DIR__ . '/../partials/header.php'; ?>
-    
     <div class="container">
         <h1>⚙️ Panel Administracyjny</h1>
         
@@ -62,10 +51,6 @@
                     <span class="action-icon">👤</span>
                     <span>Dodaj użytkownika</span>
                 </a>
-                <a href="/admin/customization" class="action-card">
-                    <span class="action-icon">🎨</span>
-                    <span>Customizuj</span>
-                </a>
                 <a href="/admin/links" class="action-card">
     <div class="action-icon">🔗</div>
     <div>Zewnętrzne linki</div>
@@ -92,5 +77,3 @@
             </table>
         </div>
     </div>
-</body>
-</html>

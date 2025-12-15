@@ -1,22 +1,10 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zarządzanie Kategoriami - Wiki Engine</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <?php include __DIR__ . '/../partials/header.php'; ?>
-    
-    <div class="container">
+        <div class="container">
         <h1>📁 Zarządzanie Kategoriami</h1>
         
         <div class="admin-nav">
             <a href="/admin" class="btn">📊 Dashboard</a>
             <a href="/admin/users" class="btn">👥 Użytkownicy</a>
             <a href="/admin/categories" class="btn active">📁 Kategorie</a>
-            <a href="/admin/customization" class="btn">🎨 Customizacja</a>
         </div>
         
         <?php if (isset($_GET['success'])): ?>
@@ -77,5 +65,3 @@
             </table>
         </div>
     </div>
-</body>
-</html>

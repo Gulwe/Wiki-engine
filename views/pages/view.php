@@ -5,22 +5,6 @@ require_once __DIR__ . '/../../core/ThemeLoader.php';
 $parser   = new WikiParser();
 $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($page['title']) ?> - <?= htmlspecialchars($siteName) ?></title>
-
-    <!-- Główny CSS + motyw -->
-    <link rel="stylesheet" href="/css/style.css?v=<?= time() ?>">
-    <?= ThemeLoader::generateCSS(); ?>
-     <!-- GLOBALNE TŁO -->
-    <?php include __DIR__ . '/../partials/background.php'; ?>
-</head>
-<body>
-
-<?php include __DIR__ . '/../partials/header.php'; ?>
 
 <div class="container">
     <?php if (isset($_GET['restored'])): ?>
@@ -204,6 +188,3 @@ $(document).ready(function() {
     });
 });
 </script>
-<?php include __DIR__ . '/../partials/footer.php'; ?>
-</body>
-</html>

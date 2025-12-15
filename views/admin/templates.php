@@ -4,24 +4,6 @@ $parser = new WikiParser();
 // views/admin/templates.php
 ?>
 
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Szablony stron - Wiki Engine</title>
-
-    <link rel="stylesheet" href="/css/base.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/components.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/layout.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/wiki.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/admin.css?v=<?= time() ?>">
-
-    <?= ThemeLoader::generateCSS(); ?>
-</head>
-<body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
-
 <div class="container">
     <h1>🧩 Szablony stron</h1>
 
@@ -29,7 +11,6 @@ $parser = new WikiParser();
         <a href="/admin" class="btn">📊 Dashboard</a>
         <a href="/admin/users" class="btn">👥 Użytkownicy</a>
         <a href="/admin/categories" class="btn">📁 Kategorie</a>
-        <a href="/admin/customization" class="btn">🎨 Customizacja</a>
         <a href="/admin/templates" class="btn active">🧩 Szablony</a>
     </div>
 
@@ -162,8 +143,6 @@ $parser = new WikiParser();
     </div>
 </div>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
-
 <script>
 function toggleTemplatePreview(id) {
     const row = document.getElementById('tpl-preview-' + id);
@@ -181,5 +160,3 @@ function toggleTemplateForm(id) {
         : 'none';
 }
 </script>
-</body>
-</html>

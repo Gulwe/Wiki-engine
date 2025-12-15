@@ -23,15 +23,6 @@ if (!empty($randomBg)):
         min-height: 100vh;
         overflow-x: hidden;
     }
-
-    /* WAŻNE: Header musi być nad tłem */
-    .modern-header,
-    header {
-        position: relative;
-        z-index: 1000 !important;
-        background-color: var(--bg-main, #1a1a2e);
-    }
-
     /* Tło z obrazkiem dla motywu: <?= htmlspecialchars($currentTheme) ?> */
     body::after {
         content: '';
@@ -59,11 +50,6 @@ if (!empty($randomBg)):
         left: 0;
         width: 100%;
         height: 100%;
-        background: radial-gradient(
-            ellipse at center,
-            transparent 0%,
-            rgba(26, 26, 46, 0.5) 100%
-        );
         pointer-events: none;
         z-index: -1;
     }
@@ -86,17 +72,10 @@ if (!empty($randomBg)):
     .card,
     .wiki-card,
     .comment-item {
-        background: rgba(30, 30, 50, 0.92);
         backdrop-filter: blur(10px);
     }
     .container {
-        opacity:0.95;
-    }
-
-    .home-sidebar-section,
-    .card,
-    .wiki-card {
-        border: 1px solid rgba(139, 92, 246, 0.25);
+       opacity:0.95;
     }
 
     /* Responsywność */

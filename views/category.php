@@ -1,18 +1,5 @@
-<?php
-// views/category.php
-?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kategoria: <?= htmlspecialchars($category['name']) ?> - Wiki Engine</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <?php include __DIR__ . '/partials/header.php'; ?>
-
-    <div class="container">
+<!-- GLOBALNE TŁO -->
+<?php include __DIR__ . '/partials/background.php'; ?>
         <div class="category-header">
             <h1 class="category-title">📁 <?= htmlspecialchars($category['name']) ?></h1>
 
@@ -111,6 +98,3 @@
         <div style="margin-top: 30px;">
             <a href="/" class="btn">🏠 Strona główna</a>
         </div>
-    </div>
-</body>
-</html>

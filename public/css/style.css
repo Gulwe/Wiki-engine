@@ -1,11 +1,12 @@
-@import url('theme-sos.css');
-@import url('theme-am.css');
-@import url('theme-ru.css');
-@import url('theme-zsi.css');
+/* style.css */
 
- 
-@import url('components.css');
-@import url('admin.css');
-@import url('wiki.css');
+@import url('themes/sos.css');
+@import url('themes/am.css');
+@import url('themes/ru.css');
+@import url('themes/zsi.css');
+
 @import url('layout.css');
+@import url('components.css');
+@import url('wiki.css');
+@import url('admin.css');
 @import url('base.css');

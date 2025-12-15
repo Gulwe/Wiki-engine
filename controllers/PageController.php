@@ -14,7 +14,7 @@ public function save(string $slug): void {
     $userId = $_SESSION['user_id'];
     
     if (empty($title) || empty($content)) {
-        header('Location: /page/' . $slug . '/edit?error=empty');
+        header('Location: /pages/' . $slug . '/edit?error=empty');
         exit;
     }
     
@@ -63,19 +63,18 @@ public function save(string $slug): void {
     // Zaktualizuj kategorie
     $this->updateCategories($pageId, $categories);
     
-    header('Location: /page/' . $slug);
+    header('Location: /pages/' . $slug);
 }
-public function create()
+public function create(): void
 {
     Auth::requireLogin();
     Auth::requireRole(['admin', 'editor']);
 
-    // Pobierz szablony
     require_once __DIR__ . '/../models/Template.php';
+
     $templateModel = new Template();
     $templates = $templateModel->getAll();
-    
-    // Pusta strona
+
     $page = [
         'title' => '',
         'slug' => '',
@@ -83,8 +82,12 @@ public function create()
         'page_id' => null
     ];
 
-    require __DIR__ . '/../views/page/edit.php';
+    View::render('pages/edit', [
+        'page' => $page,
+        'templates' => $templates
+    ]);
 }
+
 
 public function store()
 {
@@ -100,7 +103,7 @@ public function store()
     // Walidacja
     if (empty($title) || empty($content)) {
         $_SESSION['error'] = 'Tytuł i treść są wymagane.';
-        header('Location: /page/new');
+        header('Location: /pages/new');
         exit;
     }
 
@@ -115,7 +118,7 @@ public function store()
     // Sprawdź czy slug już istnieje
     if ($this->pageModel->getBySlug($slug)) {
         $_SESSION['error'] = 'Strona o tym URL już istnieje. Wybierz inny slug.';
-        header('Location: /page/new');
+        header('Location: /pages/new');
         exit;
     }
 
@@ -134,21 +137,14 @@ public function store()
         $this->saveHistory($pageId, $content, $comment);
 
         $_SESSION['success'] = 'Strona została utworzona!';
-        header('Location: /page/' . $slug);
+        header('Location: /pages/' . $slug);
     } else {
         $_SESSION['error'] = 'Błąd podczas tworzenia strony.';
-        header('Location: /page/new');
+        header('Location: /pages/new');
     }
     exit;
 }
 
-
-/**
- * Generuj slug z tytułu
- */
-/**
- * Generuj slug z tytułu
- */
 private function generateSlug($title)
 {
     // Zamiana polskich znaków
@@ -173,9 +169,6 @@ private function generateSlug($title)
     return $slug;
 }
 
-/**
- * Sanitizuj slug
- */
 private function sanitizeSlug($slug)
 {
     // Zamiana polskich znaków
@@ -200,9 +193,6 @@ private function sanitizeSlug($slug)
     return $slug;
 }
 
-/**
- * Przypisz kategorie do strony
- */
 private function assignCategories($pageId, $categories)
 {
     $db = Database::getInstance()->getConnection();
@@ -222,9 +212,6 @@ private function assignCategories($pageId, $categories)
     }
 }
 
-/**
- * Zapisz w historii zmian
- */
 private function saveHistory($pageId, $content, $comment)
 {
     $db = Database::getInstance()->getConnection();
@@ -241,7 +228,6 @@ private function saveHistory($pageId, $content, $comment)
         'comment' => $comment
     ]);
 }
-
 
 
 private function updateCategories(int $pageId, array $categories): void {
@@ -264,5 +250,36 @@ private function updateCategories(int $pageId, array $categories): void {
         }
     }
 }
+
+public function show(string $slug): void
+{
+    require_once __DIR__ . '/../core/View.php';
+    require_once __DIR__ . '/../models/Page.php';
+    require_once __DIR__ . '/../models/Analytics.php';
+
+    $pageModel = new Page();
+    $page = $pageModel->findBySlug($slug);
+
+    if (!$page) {
+        http_response_code(404);
+        View::render('404', [], null);
+        return;
+    }
+
+    // Analytics
+    $analytics = new Analytics();
+    $analytics->trackPageView(
+        $page['page_id'],
+        $_SESSION['user_id'] ?? null
+    );
+
+    // jeśli licznik jest w DB
+    $page = $pageModel->findBySlug($slug);
+
+    View::render('pages/view', [
+        'page' => $page
+    ]);
+}
+
 
 }

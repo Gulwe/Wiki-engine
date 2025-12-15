@@ -1,25 +1,17 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Strona nie znaleziona</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <?php include __DIR__ . '/partials/header.php'; ?>
-    
-    <div class="container" style="text-align: center;">
-        <h1 style="font-size: 72px;">404</h1>
-        <h2>Strona nie znaleziona</h2>
-        
-        <p style="margin: 30px 0;">
-            Szukana strona nie istnieje lub została usunięta.
+<?php
+// views/404.php - TYLKO TREŚĆ
+?>
+
+<div class="error-page">
+    <div class="error-content">
+        <h1 class="error-code">404</h1>
+        <h2 class="error-title">Strona nie znaleziona</h2>
+        <p class="error-description">
+            Ups! Strona, której szukasz nie istnieje lub została przeniesiona.
         </p>
-        
-        <div style="margin-top: 40px;">
-            <a href="/" class="btn">🏠 Powrót do strony głównej</a>
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">🏠 Strona główna</a>
+            <a href="/pages" class="btn btn-outline">📄 Wszystkie strony</a>
         </div>
     </div>
-</body>
-</html>
+</div>

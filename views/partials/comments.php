@@ -79,13 +79,13 @@ function renderComment($comment, $replies, $currentUserId, $level = 0) {
             
             <div class="comment-actions">
                 <?php if ($currentUserId): ?>
-                    <button class="btn-reply" onclick="replyTo(<?= $comment['comment_id'] ?>, '<?= htmlspecialchars($comment['username']) ?>')">
+                    <button class="btn" onclick="replyTo(<?= $comment['comment_id'] ?>, '<?= htmlspecialchars($comment['username']) ?>')">
                         💬 Odpowiedz
                     </button>
                 <?php endif; ?>
                 
                 <?php if ($isOwner): ?>
-                    <button class="btn-delete" onclick="deleteComment(<?= $comment['comment_id'] ?>)">
+                    <button class="btn" onclick="deleteComment(<?= $comment['comment_id'] ?>)">
                         🗑️ Usuń
                     </button>
                 <?php endif; ?>

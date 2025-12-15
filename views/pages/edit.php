@@ -1,32 +1,8 @@
 <?php
-/* session_start();
-require_once __DIR__ . '/../../core/Auth.php';
-require_once __DIR__ . '/../../core/ThemeLoader.php';
-
-Auth::requireLogin(); */
-
-// Pobierz dane strony jeśli edycja
 $page = $page ?? null;
 $isEdit = !empty($page['page_id']);
 $pageTitle = $isEdit ? 'Edytuj: ' . htmlspecialchars($page['title']) : 'Nowa strona';
 ?>
-
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $pageTitle ?> - Wiki Engine</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <?= ThemeLoader::generateCSS() ?>
-    
-    <!-- GLOBALNE TŁO -->
-    <?php include __DIR__ . '/../partials/background.php'; ?>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <?php include __DIR__ . '/../partials/header.php'; ?>
     
     <div class="container">
         <div class="page-header">
@@ -47,7 +23,9 @@ $pageTitle = $isEdit ? 'Edytuj: ' . htmlspecialchars($page['title']) : 'Nowa str
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
         
-        <form method="POST" action="<?= $isEdit ? '/page/' . htmlspecialchars($page['slug']) . '/save' : '/page/store' ?>" class="editor-form">
+        <!-- <form method="POST" action="<?= $isEdit ? '/page/' . htmlspecialchars($page['slug']) . '/save' : '/page/store' ?>" class="editor-form"> -->
+        <form method="POST" action="<?= $isEdit ? '/page/' . htmlspecialchars($page['slug']) . '/save' : '/page/new' ?>">
+
             
             <!-- Tytuł strony -->
             <div class="form-group">
@@ -69,7 +47,7 @@ $pageTitle = $isEdit ? 'Edytuj: ' . htmlspecialchars($page['title']) : 'Nowa str
                         id="slug" 
                         name="slug" 
                         class="form-input slug-input" 
-                        value="<?= htmlspecialchars($page['slug'] ?? '') ?>"
+                        value="<?= htmlspecialchars($page['slug'] ?? '') ?>" 
                         required
                         placeholder="john-macmillan"
                         pattern="[a-z0-9\-]+"
@@ -242,8 +220,6 @@ $pageTitle = $isEdit ? 'Edytuj: ' . htmlspecialchars($page['title']) : 'Nowa str
             <div id="preview-content" class="preview-content"></div>
         </section>
     </div>
-    
-    <?php include __DIR__ . '/../partials/footer.php'; ?>
 
 <style>
 /* Editor toolbar */
@@ -830,5 +806,3 @@ $(document).ready(function() {
     });
 });
 </script>
-</body>
-</html>

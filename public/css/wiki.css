@@ -1,5 +1,13 @@
 /* Wiki Symbols & Flags */
-.wiki-symbol,
+.wiki-symbol{
+    display: inline-block;
+    height: 50px;
+    width: auto;
+    vertical-align: text-bottom;
+    margin: 0 2px; 
+}
+
+
 .wiki-flag {
     display: inline-block;
     height: 1.2em;
@@ -1052,13 +1060,11 @@ ol li::marker {
     padding: 6px 10px;
     background: rgba(139, 92, 246, 0.05);
     border-radius: 6px;
-    border-left: 2px solid rgba(139, 92, 246, 0.3);
     transition: all 0.2s ease;
 }
 
 .infobox-value-multi-icon .multi-line-item:hover {
     background: rgba(139, 92, 246, 0.1);
-    border-left-color: rgba(139, 92, 246, 0.6);
     transform: translateX(4px);
 }
 

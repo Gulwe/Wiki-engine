@@ -1,123 +1,154 @@
 // public/js/media.js
+
 $(document).ready(function() {
-    // Click to upload
-    $('#upload-area').on('click', function() {
-        $('#image-input').click();
+    const uploadArea = $('#upload-area');
+    const fileInput = $('#image-input');
+    const uploadStatus = $('#upload-status');
+
+    // Kliknięcie w upload area otwiera input file
+    uploadArea.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); // ✅ WAŻNE!
+        fileInput.trigger('click'); // Użyj trigger zamiast click()
     });
-    
-    // File input change
-    $('#image-input').on('change', function() {
-        const file = this.files[0];
-        if (file) {
-            uploadFile(file);
-        }
+
+    // Zapobiegnij propagacji z inputa
+    fileInput.on('click', function(e) {
+        e.stopPropagation(); // ✅ WAŻNE!
     });
-    
+
     // Drag & Drop
-    const uploadArea = document.getElementById('upload-area');
-    
-    uploadArea.addEventListener('dragover', function(e) {
+    uploadArea.on('dragover', function(e) {
         e.preventDefault();
-        $(this).addClass('drag-over');
+        e.stopPropagation();
+        $(this).addClass('dragover');
     });
-    
-    uploadArea.addEventListener('dragleave', function(e) {
+
+    uploadArea.on('dragleave', function(e) {
         e.preventDefault();
-        $(this).removeClass('drag-over');
+        e.stopPropagation();
+        $(this).removeClass('dragover');
     });
-    
-    uploadArea.addEventListener('drop', function(e) {
+
+    uploadArea.on('drop', function(e) {
         e.preventDefault();
-        $(this).removeClass('drag-over');
-        
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            uploadFile(file);
-        } else {
-            showStatus('Tylko pliki obrazkowe!', 'error');
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            handleUpload(files[0]);
         }
     });
-    
-    // Upload function
-    function uploadFile(file) {
+
+    // Wybór pliku z inputa
+    fileInput.on('change', function(e) {
+        e.stopPropagation(); // ✅ WAŻNE!
+        if (this.files.length > 0) {
+            handleUpload(this.files[0]);
+        }
+    });
+
+    // Funkcja uploadująca
+    function handleUpload(file) {
+        // Walidacja rozmiaru (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showStatus('error', '❌ Plik jest za duży! Max 5MB.');
+            return;
+        }
+
+        // Walidacja typu pliku
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            showStatus('error', '❌ Nieprawidłowy format! Tylko JPG, PNG, GIF, WEBP.');
+            return;
+        }
+
+        // Formularz i upload
         const formData = new FormData();
         formData.append('image', file);
-        
-        showStatus('Uploading...', 'info');
-        
+
+        showStatus('loading', '⏳ Uploading...');
+
         $.ajax({
-            type: 'POST',
             url: '/api/upload',
+            type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
                 if (response.success) {
-                    showStatus('✓ Upload sukces!', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    showStatus('success', '✅ Obrazek uploaded!');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
                 } else {
-                    showStatus('✗ Błąd: ' + response.error, 'error');
+                    showStatus('error', '❌ Błąd: ' + (response.error || 'Nieznany błąd'));
                 }
             },
-            error: function() {
-                showStatus('✗ Błąd uploadu', 'error');
+            error: function(xhr) {
+                let errorMsg = 'Błąd uploadu';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMsg = response.error || errorMsg;
+                } catch (e) {
+                    errorMsg = 'Błąd serwera';
+                }
+                showStatus('error', '❌ ' + errorMsg);
             }
         });
     }
-    
-    function showStatus(message, type) {
-        const statusDiv = $('#upload-status');
-        statusDiv.html('<div class="status-' + type + '">' + message + '</div>');
-        
-        if (type === 'success') {
-            setTimeout(() => statusDiv.empty(), 3000);
+
+    // Pokaż status
+    function showStatus(type, message) {
+        uploadStatus.removeClass('success error loading');
+        uploadStatus.addClass(type);
+        uploadStatus.text(message);
+        uploadStatus.show();
+
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                uploadStatus.fadeOut();
+            }, 3000);
         }
     }
-    
-    // Copy URL
-    $('.copy-url').on('click', function() {
+
+    // Kopiuj URL
+    $(document).on('click', '.copy-url', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         const url = $(this).data('url');
-        copyToClipboard(window.location.origin + url);
-        showNotification('✓ URL skopiowany!');
-    });
-    
-    // Copy Wiki Link
-    $('.copy-markdown').on('click', function() {
-        const filename = $(this).data('filename');
-        const wikiLink = '{{image:' + filename + '|Alt text}}';
-        copyToClipboard(wikiLink);
-        showNotification('✓ Wiki link skopiowany!');
-    });
-    
-    function copyToClipboard(text) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-    }
-    
-    function showNotification(message) {
-        const notification = $('<div class="notification">' + message + '</div>');
-        notification.css({
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            background: '#003300',
-            color: '#00ff00',
-            padding: '15px 20px',
-            borderRadius: '4px',
-            border: '1px solid #00ff00',
-            zIndex: 9999
-        });
-        
-        $('body').append(notification);
-        
-        setTimeout(function() {
-            notification.fadeOut(function() {
-                $(this).remove();
-            });
+        copyToClipboard(url);
+        $(this).text('✅ Skopiowano!');
+        setTimeout(() => {
+            $(this).text('📋 Kopiuj URL');
         }, 2000);
+    });
+
+    // Kopiuj Wiki Link
+    $(document).on('click', '.copy-markdown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const filename = $(this).data('filename');
+        const wikiSyntax = `{{image:${filename}}}`;
+        copyToClipboard(wikiSyntax);
+        $(this).text('✅ Skopiowano!');
+        setTimeout(() => {
+            $(this).text('📝 Wiki Link');
+        }, 2000);
+    });
+
+    // Funkcja kopiująca do schowka
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+        } else {
+            // Fallback dla starszych przeglądarek
+            const tempInput = $('<input>');
+            $('body').append(tempInput);
+            tempInput.val(text).select();
+            document.execCommand('copy');
+            tempInput.remove();
+        }
     }
 });

@@ -1,35 +1,11 @@
 <?php
-// Dynamiczne ustawienia motywu
+// views/partials/header.php
 require_once __DIR__ . '/../../core/ThemeLoader.php';
 
 $siteName    = ThemeLoader::get('site_name', 'Wiki Engine');
 $siteTagline = ThemeLoader::get('site_tagline', 'Twoja baza wiedzy');
 $siteLogo    = ThemeLoader::get('site_logo', '');
 ?>
-
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($siteName) ?></title>
-
-    <!-- CSS w kolejności: base → komponenty → layout → wiki → admin → motywy -->
-    <link rel="stylesheet" href="/css/base.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/components.css?v=<?= time() ?>"> 
-    <link rel="stylesheet" href="/css/layout.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/wiki.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/admin.css?v=<?= time() ?>">
-    
-    <!-- Motywy -->
-    <link rel="stylesheet" href="/css/themes/sos.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/themes/ru.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/themes/zsi.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/css/themes/am.css?v=<?= time() ?>">
-
-    <?= ThemeLoader::generateCSS(); ?>
-</head>
-<body>
 
 <header class="modern-header">
     <div class="header-content">
@@ -169,11 +145,6 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
     </div>
 </header>
 
-<!-- JS (jQuery + skrypty wiki) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="/js/search.js"></script>
-<script src="/js/wiki.js"></script>
-
 <script>
 $(document).ready(function() {
     // Dropdown menu
@@ -252,47 +223,48 @@ $(document).ready(function() {
         localStorage.setItem(THEME_KEY, theme);
         
         // Zapisz do cookie (dla PHP)
-        setCookie('theme', theme, 365); // 1 rok
+        setCookie('theme', theme, 365);
         
         // Zmień ikonkę w przycisku
         currentThemeIcon.src = themeIcons[theme] || themeIcons['default'];
         
-        console.log('Cookie set:', getCookie('theme'));
+        // Zamknij dropdown
+        themeDropdown.classList.remove('active');
         
-        // Przeładuj stronę aby załadować nowe tło
         if (reload) {
-            console.log('Reloading page...');
-            setTimeout(() => {
-                window.location.reload();
-            }, 100);
+            location.reload();
         }
     }
 
-    // Przy ładowaniu strony - sprawdź zapisany motyw
-    let savedTheme = getCookie('theme') || localStorage.getItem(THEME_KEY) || 'default';
-    console.log('Saved theme on load:', savedTheme);
-    applyTheme(savedTheme, false); // Nie przeładowuj przy pierwszym załadowaniu
+    // Załaduj zapisany motyw przy starcie
+    const savedTheme = getCookie('theme') || localStorage.getItem(THEME_KEY) || 'default';
+    applyTheme(savedTheme, false);
 
     // Toggle dropdown
     themeSelectorBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-
+        themeDropdown.classList.toggle('active');
+        
         // Zamknij inne dropdowny
         $('.dropdown-menu').removeClass('active');
-
-        // Toggle theme dropdown
-        themeDropdown.classList.toggle('active');
     });
 
     // Wybór motywu
     themeOptions.forEach(option => {
         option.addEventListener('click', function() {
             const theme = this.getAttribute('data-theme');
-            console.log('Theme selected:', theme);
-            
-            applyTheme(theme, true); // Przeładuj stronę
-            themeDropdown.classList.remove('active');
+            applyTheme(theme, false);
         });
+    });
+
+    // Zamknij dropdown przy kliknięciu poza
+    document.addEventListener('click', function() {
+        themeDropdown.classList.remove('active');
+    });
+
+    // Zapobiegaj zamknięciu przy kliknięciu wewnątrz dropdown
+    themeDropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
     });
 });
 </script>
