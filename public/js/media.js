@@ -5,16 +5,19 @@ $(document).ready(function() {
     const fileInput = $('#image-input');
     const uploadStatus = $('#upload-status');
 
+    // Dodaj atrybut "multiple" do inputa (w HTML lub tutaj)
+    fileInput.attr('multiple', true);
+
     // Kliknięcie w upload area otwiera input file
     uploadArea.on('click', function(e) {
         e.preventDefault();
-        e.stopPropagation(); // ✅ WAŻNE!
-        fileInput.trigger('click'); // Użyj trigger zamiast click()
+        e.stopPropagation();
+        fileInput.trigger('click');
     });
 
     // Zapobiegnij propagacji z inputa
     fileInput.on('click', function(e) {
-        e.stopPropagation(); // ✅ WAŻNE!
+        e.stopPropagation();
     });
 
     // Drag & Drop
@@ -37,66 +40,90 @@ $(document).ready(function() {
 
         const files = e.originalEvent.dataTransfer.files;
         if (files.length > 0) {
-            handleUpload(files[0]);
+            handleMultipleUpload(files); // ✅ Masowy upload
         }
     });
 
-    // Wybór pliku z inputa
+    // Wybór pliku/plików z inputa
     fileInput.on('change', function(e) {
-        e.stopPropagation(); // ✅ WAŻNE!
+        e.stopPropagation();
         if (this.files.length > 0) {
-            handleUpload(this.files[0]);
+            handleMultipleUpload(this.files); // ✅ Masowy upload
         }
     });
 
-    // Funkcja uploadująca
-    function handleUpload(file) {
-        // Walidacja rozmiaru (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            showStatus('error', '❌ Plik jest za duży! Max 5MB.');
-            return;
-        }
-
-        // Walidacja typu pliku
+    // ✅ NOWA FUNKCJA: Masowy upload wielu plików
+    function handleMultipleUpload(files) {
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            showStatus('error', '❌ Nieprawidłowy format! Tylko JPG, PNG, GIF, WEBP.');
-            return;
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const formData = new FormData();
+        let validFilesCount = 0;
+        let invalidFiles = [];
+
+        // Walidacja i dodanie plików do FormData
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            // Walidacja rozmiaru
+            if (file.size > maxSize) {
+                invalidFiles.push(`${file.name} (za duży)`);
+                continue;
+            }
+
+            // Walidacja typu
+            if (!validTypes.includes(file.type)) {
+                invalidFiles.push(`${file.name} (zły format)`);
+                continue;
+            }
+
+            // Dodaj do FormData (użyj nazwy tablicowej dla PHP)
+            formData.append('images[]', file);
+            validFilesCount++;
         }
 
-        // Formularz i upload
-        const formData = new FormData();
-        formData.append('image', file);
-
-        showStatus('loading', '⏳ Uploading...');
-
-        $.ajax({
-            url: '/api/upload',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    showStatus('success', '✅ Obrazek uploaded!');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                } else {
-                    showStatus('error', '❌ Błąd: ' + (response.error || 'Nieznany błąd'));
-                }
-            },
-            error: function(xhr) {
-                let errorMsg = 'Błąd uploadu';
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    errorMsg = response.error || errorMsg;
-                } catch (e) {
-                    errorMsg = 'Błąd serwera';
-                }
-                showStatus('error', '❌ ' + errorMsg);
+        // Pokaż błędy walidacji
+        if (invalidFiles.length > 0) {
+            showStatus('error', `❌ Pominięto: ${invalidFiles.join(', ')}`);
+            
+            // Jeśli wszystkie pliki są nieprawidłowe, zakończ
+            if (validFilesCount === 0) {
+                return;
             }
-        });
+        }
+
+        // Upload prawidłowych plików
+        if (validFilesCount > 0) {
+            showStatus('loading', `⏳ Uploading ${validFilesCount} plików...`);
+
+            $.ajax({
+                url: '/api/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        const uploaded = response.uploaded || validFilesCount;
+                        showStatus('success', `✅ Uploaded ${uploaded} obrazków!`);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showStatus('error', '❌ Błąd: ' + (response.error || 'Nieznany błąd'));
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Błąd uploadu';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = 'Błąd serwera';
+                    }
+                    showStatus('error', '❌ ' + errorMsg);
+                }
+            });
+        }
     }
 
     // Pokaż status
@@ -143,7 +170,6 @@ $(document).ready(function() {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text);
         } else {
-            // Fallback dla starszych przeglądarek
             const tempInput = $('<input>');
             $('body').append(tempInput);
             tempInput.val(text).select();

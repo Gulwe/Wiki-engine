@@ -8,20 +8,20 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
         </div>
         
 <div class="upload-section">
-    <h2>📤 Upload nowego obrazka</h2>
+    <h2>📤 Upload obrazków</h2>
     <form id="upload-form" enctype="multipart/form-data">
-        <!-- INPUT POZA upload-area! -->
-        <input type="file" id="image-input" name="image" accept="image/*" style="display:none;">
+        <input type="file" id="image-input" name="images[]" accept="image/*" multiple style="display:none;">
         
         <div class="upload-area" id="upload-area">
             <div class="upload-prompt">
-                <p>🖼️ Kliknij lub przeciągnij obrazek tutaj</p>
-                <small>Max 5MB | JPG, PNG, GIF, WEBP</small>
+                <p>🖼️ Kliknij lub przeciągnij obrazki tutaj</p>
+                <small>Max 5MB każdy | JPG, PNG, GIF, WEBP</small>
             </div>
         </div>
         <div id="upload-status"></div>
     </form>
 </div>
+
 
         
         <div class="media-grid">

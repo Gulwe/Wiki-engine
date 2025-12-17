@@ -77,38 +77,72 @@
 }
 
 /* Tables */
+/* Tabele wiki */
 .wiki-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 25px 0;
+    margin: 20px 0;
     background: var(--card-bg);
-    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+}
+
+.wiki-table th,
+.wiki-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
 }
 
 .wiki-table th {
-    background: rgba(0, 0, 0, 0.15);
-    color: var(--text-secondary);
-    padding: 14px;
-    text-align: left;
-    font-weight: 700;
-    border-bottom: 2px solid var(--border-color);
+    background: var(--accent-main);
+    color: white;
+    font-weight: 600;
+    text-align: center;
 }
 
-.wiki-table td {
-    padding: 12px;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border-color);
+.wiki-table th[colspan] {
+    background: linear-gradient(135deg, var(--border-subtle) 0%, var(--accent-strong) 50%, var(--border-subtle) 100%);
+    font-size: 1.2em;
+    text-align: center;
+    padding: 15px;
 }
 
-.wiki-table tr:last-child td {
-    border-bottom: none;
+
+.wiki-table tr:nth-child(even) {
+    background: var(--bg-surface);
 }
 
 .wiki-table tr:hover {
-    background: rgba(0, 0, 0, 0.12);
+    background: var(--bg-surface-alt);
 }
+
+/* Obrazy w tabelach - inline obok siebie */
+.wiki-table figure.wiki-image {
+    display: inline-block;
+    margin: 2px;
+    vertical-align: middle;
+}
+
+.wiki-table figure.wiki-image img {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+}
+
+.wiki-table figcaption {
+    display: none; /* Ukryj podpisy w tabelach */
+}
+
+/* Nazwa technologii */
+.wiki-table td strong {
+    display: block;
+    margin-top: 8px;
+    text-align: center;
+    color: var(--accent-main);
+}
+
 
 /* Code Blocks */
 pre {
@@ -255,7 +289,6 @@ ul, ol {
 }
 
 ul li, ol li {
-    margin: 8px 0;
     color: var(--text-primary);
 }
 
@@ -1080,5 +1113,35 @@ ol li::marker {
     font-style: italic;
 }
 
+/* Obrazki GIF obok siebie (inline) */
+.wiki-image {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 5px 5px 0;
+}
+
+.wiki-image img {
+    display: block;
+    border: none;
+    box-shadow: none;
+}
+
+/* Usuń ramki i cienie z wszystkich obrazków wiki */
+.wiki-image figure,
+.wiki-image figcaption {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* Dla małych gifów (jak ikony postaci) */
+.wiki-image img[src$=".gif"] {
+    max-width: 64px;
+    height: auto;
+    border: none;
+    box-shadow: none;
+}
 
 

@@ -282,51 +282,54 @@ private function parseYouTube(string $content): string {
         }, $content);
     }
 
-    // === GŁÓWNE PARSOWANIE ===
-    public function parse(string $content): string {
-        if (empty($content)) {
-            return '';
-        }
-
-        // 1. Kod (inline)
-        $content = $this->parseCode($content);
-
-        // 2. Struktury / bloki
-        $content = $this->parseInfobox($content);  // <--- DODANE: parsuj infobox NAJPIERW
-        $content = $this->parseTemplates($content);
-        $content = $this->parseAlerts($content);
-        $content = $this->parseAccordion($content);
-        $content = $this->parseTimeline($content);
-        $content = $this->parseButtons($content);
-        $content = $this->parseCards($content);
-        $content = $this->parseBoxes($content);
-        $content = $this->parseSidebar($content);
-        $content = $this->parseColumns($content);
-        $content = $this->parseGrid($content);
-        $content = $this->parseSplit($content);
-        $content = $this->parseSections($content);
-        $content = $this->parseTables($content);
-        $content = $this->parseImages($content);
-        $content = $this->parseFlags($content);
-        $content = $this->parseSymbols($content);
-        $content = $this->parseYouTube($content);
-
-        // 3. Inline
-        $content = $this->parseHeadings($content);
-        $content = $this->parseFormatting($content);
-        $content = $this->parseBadges($content);
-        $content = $this->parseIcons($content);
-        $content = $this->parseProgress($content);
-        $content = $this->parseLists($content);
-        $content = $this->parseQuotes($content);
-        $content = $this->parseLinks($content);
-        $content = $this->parseTags($content);
-
-        // 4. Paragrafy
-        $content = $this->parseParagraphs($content);
-
-        return $content;
+public function parse(string $content): string {
+    if (empty($content)) {
+        return '';
     }
+
+    // 0. TABELE - MUSZĄ BYĆ PIERWSZE!
+    $content = $this->parseTables($content);
+
+    // 1. Kod (inline)
+    $content = $this->parseCode($content);
+    $content = $this->parseLineBreaks($content);
+
+    // 2. Struktury / bloki
+    $content = $this->parseInfobox($content);
+    $content = $this->parseTemplates($content);
+    $content = $this->parseAlerts($content);
+    $content = $this->parseAccordion($content);
+    $content = $this->parseTimeline($content);
+    $content = $this->parseButtons($content);
+    $content = $this->parseCards($content);
+    $content = $this->parseBoxes($content);
+    $content = $this->parseSidebar($content);
+    $content = $this->parseColumns($content);
+    $content = $this->parseGrid($content);
+    $content = $this->parseSplit($content);
+    $content = $this->parseSections($content);
+    $content = $this->parseImages($content);
+    $content = $this->parseFlags($content);
+    $content = $this->parseSymbols($content);
+    $content = $this->parseYouTube($content);
+
+    // 3. Inline
+    $content = $this->parseHeadings($content);
+    $content = $this->parseFormatting($content);
+    $content = $this->parseBadges($content);
+    $content = $this->parseIcons($content);
+    $content = $this->parseProgress($content);
+    $content = $this->parseLists($content);
+    $content = $this->parseQuotes($content);
+    $content = $this->parseLinks($content);
+    $content = $this->parseTags($content);
+
+    // 4. Paragrafy
+    $content = $this->parseParagraphs($content);
+
+    return $content;
+}
+
 
     // === PRZYCISKI ===
     // {{button|URL|Tekst|color}}
@@ -370,64 +373,143 @@ private function parseSidebar(string $content): string {
 
 
 // === TABELE ===
+// private function parseTables(string $content): string {
+//     // MediaWiki-like
+//     $pattern = '/\{\|(.*?)\n(.*?)\|\}/s';
+
+//     return preg_replace_callback($pattern, function($matches) {
+//         $attributes    = trim($matches[1]);
+//         $tableContent  = $matches[2];
+
+//         $class = 'wiki-table';
+//         if (preg_match('/class=["\']([^"\']+)["\']/', $attributes, $classMatch)) {
+//             $class .= ' ' . $classMatch[1];
+//         }
+
+//         $html = '<table class="' . $class . '">';
+
+//         // Caption
+//         if (preg_match('/\|\+\s*(.+)/', $tableContent, $captionMatch)) {
+//             $html .= '<caption>' . htmlspecialchars(trim($captionMatch[1])) . '</caption>';
+//             $tableContent = preg_replace('/\|\+\s*.+/', '', $tableContent);
+//         }
+
+//         // Podziel na wiersze po |-
+//         $rows = preg_split('/\n\|-/', "\n" . $tableContent);
+
+//         foreach ($rows as $row) {
+//             $row = trim($row);
+//             if (empty($row)) continue;
+
+//             $html .= '<tr>';
+
+//             // Nagłówki (zaczynają się od !)
+//             if (preg_match('/^!\s*(.+)/s', $row, $headerMatch)) {
+//                 $cells = preg_split('/\s*!!\s*/', trim($headerMatch[1]));
+//                 foreach ($cells as $cell) {
+//                     $cell = trim($cell);
+//                     if (!empty($cell)) {
+//                         $html .= '<th>' . $this->parseInline($cell) . '</th>';
+//                     }
+//                 }
+//             }
+//             // Komórki danych (zaczynają się od |)
+//             elseif (preg_match('/^\|\s*(.+)/s', $row, $dataMatch)) {
+//                 $cells = preg_split('/\s*\|\|\s*/', trim($dataMatch[1]));
+//                 foreach ($cells as $cell) {
+//                     $cell = trim($cell);
+//                     if (!empty($cell)) {
+//                         $html .= '<td>' . $this->parseInline($cell) . '</td>';
+//                     }
+//                 }
+//             }
+
+//             $html .= '</tr>';
+//         }
+
+//         $html .= '</table>';
+//         return $html;
+//     }, $content);
+// }
+
+// === NOWA LINIA [br] ===
+private function parseLineBreaks(string $content): string {
+    return str_replace('[br]', '<br>', $content);
+}
+
+
+// === TABELE [table] ===
 private function parseTables(string $content): string {
-    // MediaWiki-like
-    $pattern = '/\{\|(.*?)\n(.*?)\|\}/s';
-
-    return preg_replace_callback($pattern, function($matches) {
-        $attributes    = trim($matches[1]);
-        $tableContent  = $matches[2];
-
-        $class = 'wiki-table';
-        if (preg_match('/class=["\']([^"\']+)["\']/', $attributes, $classMatch)) {
-            $class .= ' ' . $classMatch[1];
-        }
-
-        $html = '<table class="' . $class . '">';
-
-        // Caption
-        if (preg_match('/\|\+\s*(.+)/', $tableContent, $captionMatch)) {
-            $html .= '<caption>' . htmlspecialchars(trim($captionMatch[1])) . '</caption>';
-            $tableContent = preg_replace('/\|\+\s*.+/', '', $tableContent);
-        }
-
-        // Podziel na wiersze po |-
-        $rows = preg_split('/\n\|-/', "\n" . $tableContent);
-
-        foreach ($rows as $row) {
-            $row = trim($row);
-            if (empty($row)) continue;
-
-            $html .= '<tr>';
-
-            // Nagłówki (zaczynają się od !)
-            if (preg_match('/^!\s*(.+)/s', $row, $headerMatch)) {
-                $cells = preg_split('/\s*!!\s*/', trim($headerMatch[1]));
-                foreach ($cells as $cell) {
-                    $cell = trim($cell);
-                    if (!empty($cell)) {
-                        $html .= '<th>' . $this->parseInline($cell) . '</th>';
-                    }
+    return preg_replace_callback('/\[table(?:\s+class="([^"]+)")?\](.*?)\[\/table\]/s', function($matches) {
+        $tableClass = !empty($matches[1]) ? 'wiki-table ' . $matches[1] : 'wiki-table';
+        $tableContent = $matches[2];
+        
+        $output = '<table class="' . $tableClass . '">';
+        
+        preg_match_all('/\[row\](.*?)\[\/row\]/s', $tableContent, $rowMatches);
+        
+        foreach ($rowMatches[1] as $rowContent) {
+            $output .= '<tr>';
+            
+            // Nagłówki [header]
+            if (preg_match_all('/\[header(?:\s+rowspan="(\d+)")?(?:\s+colspan="(\d+)")?\](.*?)\[\/header\]/s', $rowContent, $headerMatches, PREG_SET_ORDER)) {
+                foreach ($headerMatches as $header) {
+                    $rowspan = !empty($header[1]) ? ' rowspan="' . $header[1] . '"' : '';
+                    $colspan = !empty($header[2]) ? ' colspan="' . $header[2] . '"' : '';
+                    $output .= '<th' . $rowspan . $colspan . '>' . htmlspecialchars(trim($header[3])) . '</th>';
                 }
             }
-            // Komórki danych (zaczynają się od |)
-            elseif (preg_match('/^\|\s*(.+)/s', $row, $dataMatch)) {
-                $cells = preg_split('/\s*\|\|\s*/', trim($dataMatch[1]));
-                foreach ($cells as $cell) {
-                    $cell = trim($cell);
-                    if (!empty($cell)) {
-                        $html .= '<td>' . $this->parseInline($cell) . '</td>';
-                    }
+            
+            // Komórki [cell]
+            if (preg_match_all('/\[cell(?:\s+rowspan="(\d+)")?(?:\s+colspan="(\d+)")?\](.*?)\[\/cell\]/s', $rowContent, $cellMatches, PREG_SET_ORDER)) {
+                foreach ($cellMatches as $cell) {
+                    $rowspan = !empty($cell[1]) ? ' rowspan="' . $cell[1] . '"' : '';
+                    $colspan = !empty($cell[2]) ? ' colspan="' . $cell[2] . '"' : '';
+                    
+                    $cellText = trim($cell[3]);
+                    
+                    // Parsuj TYLKO obrazki {{image:...}}
+                    $cellText = preg_replace_callback('/\{\{image:([^}]+)\}\}/', function($m) {
+                        return '<img src="/uploads/' . htmlspecialchars($m[1]) . '" alt="" style="max-width:32px;height:auto;vertical-align:middle;">';
+                    }, $cellText);
+                    
+                    // Parsuj TYLKO bold **...**
+                    $cellText = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $cellText);
+                    
+                    // Zamień [br] na <br>
+                    $cellText = str_replace('[br]', '<br>', $cellText);
+                    
+                    // Zamień entery na <br>
+                    $cellText = nl2br($cellText);
+                    
+                    $output .= '<td' . $rowspan . $colspan . '>' . $cellText . '</td>';
                 }
             }
-
-            $html .= '</tr>';
+            
+            $output .= '</tr>';
         }
-
-        $html .= '</table>';
-        return $html;
+        
+        $output .= '</table>';
+        return $output;
     }, $content);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // === CYTATY ===
@@ -565,11 +647,8 @@ private function parseFlags(string $content): string {
 
 // === OBRAZKI ===
 private function parseImages(string $content): string {
-    // {{image:filename.jpg|Alt text|left|300px|hero}}
-    // {{image:https://example.com/img.png|Alt text|center|400px|shadow}}
-    // W alt tekście możesz użyć "\n" jako separatora linii dla podpisu, np.:
-    // {{image:...jpg|Premiery \n Oryginał: 27.03.2012 \n Remaster: 08.08.2024|center|250px}}
-    $pattern = '/\{\{image:([^|]+)(?:\|([^|]*)?)?(?:\|(left|right|center))?(?:\|(\d+|full)px?)?(?:\|(hero|shadow))?\}\}/';
+    // Dopasuj TYLKO do pierwszego }} (lazy match)
+    $pattern = '/\{\{image:([^|}]+?)(?:\|([^|]*)?)?(?:\|(left|right|center))?(?:\|(\d+|full)px?)?(?:\|(hero|shadow))?\}\}/';
 
     return preg_replace_callback($pattern, function($matches) {
         $srcRaw   = trim($matches[1]);
@@ -578,7 +657,6 @@ private function parseImages(string $content): string {
         $widthRaw = isset($matches[4]) && $matches[4] !== '' ? $matches[4] : '100';
         $mode     = isset($matches[5]) ? $matches[5] : '';
 
-        // Zewnętrzny URL czy lokalny upload
         if (preg_match('~^https?://~i', $srcRaw)) {
             $src = $srcRaw;
         } else {
@@ -595,16 +673,12 @@ private function parseImages(string $content): string {
             $classes[] = 'wiki-image-shadow';
         }
 
-        // Szerokość
         if ($widthRaw === 'full') {
             $widthCss = '100%';
         } else {
             $widthCss = (int)$widthRaw . 'px';
         }
 
-        // Przetwarzanie alt:
-        // - w alt="" jedna linia (screen readery)
-        // - w figcaption "\n" → <br> dla wizualnego łamania linii
         $altForAttr    = str_replace('\n', ' ', $altRaw);
         $altForCaption = str_replace('\n', "\n", $altRaw);
         $altForCaption = nl2br(htmlspecialchars($altForCaption));
@@ -623,6 +697,7 @@ private function parseImages(string $content): string {
         return $html;
     }, $content);
 }
+
 
 
 
@@ -785,8 +860,10 @@ private function parseInline(string $content): string {
     $content = $this->parseTags($content);
     $content = $this->parseIcons($content);
     $content = $this->parseBadges($content);
-    return nl2br($content);
+    ;
+    return $content;
 }
+
 
 
     // === HELPER: Slugify ===

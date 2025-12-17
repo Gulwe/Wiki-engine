@@ -81,22 +81,10 @@ header {
     left: 0;
     right: 0;
     height: 100%;
-    background: linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.2) 0%,
-        transparent 20%,
-        transparent 80%,
-        rgba(0, 0, 0, 0.2) 100%
-    );
+    background-color: var(--bg-surface);
     pointer-events: none;
 }
 
-.modern-header:hover {
-    box-shadow: 
-        0 6px 30px rgba(0, 0, 0, 0.6),
-        0 10px 40px rgba(139, 92, 246, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
 
 /* Po przewinięciu - lekko przyciemniony */
 .modern-header.scrolled {
@@ -171,10 +159,8 @@ header {
 }
 
 .modern-header .logo:hover {
-    background: rgba(139, 92, 246, 0.1);
-    box-shadow: 
-        0 4px 12px rgba(139, 92, 246, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: rgb(255 255 255 / 10%);
+    box-shadow: 0 4px 12px rgb(255 255 255 / 20%), inset 0 1px 0 rgb(255 255 255 / 5%);
     transform: translateY(-1px);
 }
 
