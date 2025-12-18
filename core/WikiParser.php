@@ -470,7 +470,7 @@ private function parseTables(string $content): string {
                     
                     // Parsuj TYLKO obrazki {{image:...}}
                     $cellText = preg_replace_callback('/\{\{image:([^}]+)\}\}/', function($m) {
-                        return '<img src="/uploads/' . htmlspecialchars($m[1]) . '" alt="" style="max-width:32px;height:auto;vertical-align:middle;">';
+                        return '<img src="/uploads/' . htmlspecialchars($m[1]) . '" alt="" style="max-width:auto;height:auto;vertical-align:middle;">';
                     }, $cellText);
                     
                     // Parsuj TYLKO bold **...**
@@ -626,11 +626,12 @@ private function parseSymbols(string $content): string {
 
 // === FLAGI ===
 private function parseFlags(string $content): string {
-    $pattern = '/\{\{flag:([A-Za-z]{2})(?:\|([^}]*))?\}\}/';
+    // Zmieniony pattern - akceptuje litery, cyfry, myślniki i podkreślenia
+    $pattern = '/\{\{flag:([A-Za-z0-9\-_]+)(?:\|([^}]*))?\}\}/';
 
     return preg_replace_callback($pattern, function ($m) {
         $code = strtoupper($m[1]);
-        $codeLC = strtolower($code);
+        $codeLC = strtolower($m[1]); // Nie uppercase całości, tylko dla label
         $label = isset($m[2]) && trim($m[2]) !== '' ? trim($m[2]) : $code;
 
         $src = "https://flagcdn.com/w40/{$codeLC}.png";
@@ -642,6 +643,7 @@ private function parseFlags(string $content): string {
                      title="' . htmlspecialchars($label) . '">';
     }, $content);
 }
+
 
 
 
@@ -895,7 +897,9 @@ private function parseInfobox(string $content): string
             $value = trim($match[2]);
             
             // Usuń zbędne białe znaki ale zachowaj nowe linie
-            $value = preg_replace('/\s+/u', ' ', $value);
+            // $value = preg_replace('/\s+/u', ' ', $value);
+            $value = preg_replace('/[ \t]+/', ' ', $value);
+
             
             $params[$key] = $value;
         }
@@ -975,17 +979,20 @@ private function renderInfoboxPostac(array $params): string {
     $html .= '<span class="infobox-value">' . htmlspecialchars($wiek) . '</span>';
     $html .= '</div>';
     
-    // Pochodzenie z flagą
-    $html .= '<div class="infobox-row">';
-    $html .= '<span class="infobox-label">Pochodzenie:</span> ';
-    $html .= '<span class="infobox-value">';
-    if (!empty($pochodzenieFlag)) {
-        $flagSrc = $this->generateFlagSrc($pochodzenieFlag);
-        $html .= '<img src="' . $flagSrc . '" alt="' . htmlspecialchars($pochodzenie) . '" class="infobox-flag"> ';
-    }
-    $html .= htmlspecialchars($pochodzenie);
-    $html .= '</span>';
-    $html .= '</div>';
+// Pochodzenie z flagą
+$html .= '<div class="infobox-row">';
+$html .= '<span class="infobox-label">Pochodzenie:</span> ';
+$html .= '<span class="infobox-value">';
+
+if (!empty($pochodzenieFlag)) {
+    // Wstaw tag {{flag:...}} który zostanie sparsowany później
+    $html .= '{{flag:' . $pochodzenieFlag . '}} ';
+}
+
+$html .= htmlspecialchars($pochodzenie);
+$html .= '</span>';
+$html .= '</div>';
+
     
     // Dubbing
     $html .= '<div class="infobox-row">';

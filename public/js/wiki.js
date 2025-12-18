@@ -2,7 +2,24 @@
 
 $(document).ready(function() {
     
-    // Auto-save drafts co 30 sekund
+    // ========================================
+    // TABS - PRZE≈ÅƒÑCZANIE NACJI
+    // ========================================
+    $('.nation-tab').on('click', function() {
+        const nation = $(this).data('nation');
+        
+        // Usu≈Ñ active ze wszystkich
+        $('.nation-tab').removeClass('active');
+        $('.nation-content').removeClass('active');
+        
+        // Dodaj active do klikniƒôtego
+        $(this).addClass('active');
+        $('#' + nation + '-content').addClass('active');
+    });
+    
+    // ========================================
+    // AUTO-SAVE DRAFTS
+    // ========================================
     let autoSaveTimer;
     $('#page-editor').on('input', function() {
         clearTimeout(autoSaveTimer);
@@ -27,12 +44,14 @@ $(document).ready(function() {
                 showNotification('Szkic zapisany', 'success');
             },
             error: function() {
-                console.error('B≥πd zapisu szkicu');
+                console.error('B≈ÇƒÖd zapisu szkicu');
             }
         });
     }
     
-    // Upload obrazkÛw z drag & drop
+    // ========================================
+    // DRAG & DROP UPLOAD
+    // ========================================
     const uploadZone = $('#image-upload-zone');
     
     if (uploadZone.length) {
@@ -72,11 +91,11 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.urls && Array.isArray(response.urls)) {
                     insertImageLinks(response.urls);
-                    showNotification('Obrazki za≥adowane', 'success');
+                    showNotification('Obrazki za≈Çadowane', 'success');
                 }
             },
             error: function() {
-                showNotification('B≥πd wgrywania obrazkÛw', 'error');
+                showNotification('B≈ÇƒÖd wgrywania obrazk√≥w', 'error');
             }
         });
     }
@@ -94,12 +113,14 @@ $(document).ready(function() {
         editor.val(currentContent + '\n' + markdown);
     }
     
-    // Preview zmian przed zapisaniem
+    // ========================================
+    // PREVIEW
+    // ========================================
     $('#preview-btn').on('click', function() {
         const content = $('#page-editor').val();
         
         if (!content) {
-            showNotification('Brak treúci do podglπdu', 'warning');
+            showNotification('Brak tre≈õci do podglƒÖdu', 'warning');
             return;
         }
         
@@ -114,30 +135,33 @@ $(document).ready(function() {
                 $('#preview-container').html(html).show();
             },
             error: function() {
-                showNotification('B≥πd generowania podglπdu', 'error');
+                showNotification('B≈ÇƒÖd generowania podglƒÖdu', 'error');
             }
         });
     });
     
-    // Accordion z jQuery
+    // ========================================
+    // ACCORDION
+    // ========================================
     $(document).on('click', '.accordion-header', function() {
         const item = $(this).closest('.accordion-item');
         const content = item.find('.accordion-content');
         const icon = item.find('.accordion-icon');
         
-        // Toggle obecny
         content.slideToggle(300);
         
         if (content.is(':visible')) {
             icon.html('^').css('transform', 'rotate(0deg)');
             item.addClass('active');
         } else {
-            icon.html('°').css('transform', 'rotate(0deg)');
+            icon.html('‚Üì').css('transform', 'rotate(0deg)');
             item.removeClass('active');
         }
     });
     
-    // Helper: wyúwietlanie powiadomieÒ
+    // ========================================
+    // HELPER: NOTIFICATIONS
+    // ========================================
     function showNotification(message, type) {
         type = type || 'info';
         

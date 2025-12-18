@@ -43,6 +43,77 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
         <a href="/syntax-help" class="btn-outline">📘 Pomoc składni</a>
             <?php endif; ?>
     </div>
+    <!-- SEKCJA KAMPANII I LORE -->
+<div class="home-categories">
+    <!-- Kampanie -->
+    <div class="category-section">
+        <h3 class="category-title">Kampanie</h3>
+        <div class="category-grid">
+            <a href="/page/kampania-amerykanska" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/am.png" alt="Amerykanie">
+                </div>
+                <div class="category-name">Kampania Amerykańska</div>
+            </a>
+            <a href="/page/kampania-rosyjska" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/ru.png" alt="Rosjanie">
+                </div>
+                <div class="category-name">Kampania Rosyjska</div>
+            </a>
+            <a href="/page/kampania-ares" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/Ares.png" alt="Ares">
+                </div>
+                <div class="category-name">Kampania Ares</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Lore i opisy -->
+    <div class="category-section">
+        <h3 class="category-title">Lore i opisy</h3>
+        <div class="category-grid">
+            <a href="/page/bazy" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/bazy.png" alt="Bazy">
+                </div>
+                <div class="category-name">Bazy</div>
+            </a>
+            <a href="/page/profesje" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/profesje.png" alt="Profesje">
+                </div>
+                <div class="category-name">Profesje</div>
+            </a>
+            <a href="/page/fabryka" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/fabryka.png" alt="Fabryka">
+                </div>
+                <div class="category-name">Fabryka</div>
+            </a>
+            <a href="/page/budynki" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/budynki.png" alt="Budynki">
+                </div>
+                <div class="category-name">Budynki</div>
+            </a>
+            <a href="/page/postacie" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/postacie.png" alt="Postacie">
+                </div>
+                <div class="category-name">Postacie</div>
+            </a>
+            <a href="/page/technologie" class="category-card">
+                <div class="category-icon">
+                    <img src="/uploads/icons/technologie.png" alt="Technologie">
+                </div>
+                <div class="category-name">Technologie</div>
+            </a>
+        </div>
+    </div>
+</div>
+
 </div>
 
 <!-- TRZY KOLUMNY -->
