@@ -296,7 +296,10 @@ public function parse(string $content): string {
 
     // 2. Struktury / bloki
     $content = $this->parseInfobox($content);
+    $content = $this->parseQuote($content);
+    $content = $this->parseRightImage($content);
     $content = $this->parseTemplates($content);
+    $content = $this->parseCharacters($content);
     $content = $this->parseAlerts($content);
     $content = $this->parseAccordion($content);
     $content = $this->parseTimeline($content);
@@ -370,6 +373,47 @@ private function parseSidebar(string $content): string {
     }, $content);
 }
 
+private function parseQuote(string $content): string
+{
+    $pattern = '/\{\{quote\s*(.*?)\}\}/is';
+
+    return preg_replace_callback($pattern, function ($m) {
+        $raw = $m[1];
+        $params = [];
+
+        preg_match_all(
+            '/\|\s*([a-z_]+)\s*=\s*(.*?)(?=\n\|\s*[a-z_]+\s*=|\}\}|$)/is',
+            $raw,
+            $matches,
+            PREG_SET_ORDER
+        );
+
+        foreach ($matches as $match) {
+            $key = trim($match[1]);
+            $value = trim($match[2]);
+            $params[$key] = $value;
+        }
+
+        $text   = $params['text']   ?? '';
+        $author = $params['author'] ?? '';
+
+        if ($text === '') {
+            return '';
+        }
+
+        $html  = '<figure class="wiki-quote">';
+        $html .=    '<blockquote class="wiki-quote-text">' . $text . '</blockquote>';
+
+        if ($author !== '') {
+            $html .= '<figcaption class="wiki-quote-author">— ' .
+                     htmlspecialchars($author) . '</figcaption>';
+        }
+
+        $html .= '</figure>';
+
+        return $html;
+    }, $content);
+}
 
 
 // === TABELE ===
@@ -587,23 +631,62 @@ private function parseTables(string $content): string {
         }, $content);
     }
 
-    // === TEMPLATES / WSTAWKI ===
-    private function parseTemplates(string $content): string {
-        $content = preg_replace(
-            '/\{\{toc\}\}/',
-            '<div class="wiki-toc" id="toc"><strong>📁 Spis treści</strong><ul id="toc-list"></ul></div>',
-            $content
-        );
+// === TEMPLATES / WSTAWKI ===
+private function parseTemplates(string $content): string {
+    // TOC
+    $content = preg_replace(
+        '/\{\{toc\}\}/',
+        '<div class="wiki-toc" id="toc"><strong>📁 Spis treści</strong><ul id="toc-list"></ul></div>',
+        $content
+    );
 
-        $content = preg_replace('/\{\{clear\}\}/', '<div style="clear:both;"></div>', $content);
-        $content = preg_replace('/\{\{divider\}\}/', '<hr class="wiki-divider">', $content);
+    // Inne proste wstawki
+    $content = preg_replace('/\{\{clear\}\}/', '<div style="clear:both;"></div>', $content);
+    $content = preg_replace('/\{\{divider\}\}/', '<hr class="wiki-divider">', $content);
 
-        $content = preg_replace_callback('/\{\{date\}\}/', function() {
-            return date('d.m.Y');
-        }, $content);
+    $content = preg_replace_callback('/\{\{date\}\}/', function () {
+        return date('d.m.Y');
+    }, $content);
 
-        return $content;
-    }
+    // === INFOBOX POSTAĆ ===
+    $content = preg_replace_callback(
+        '/\{\{infobox-postac\s*(.*?)\}\}/si',
+        function ($matches) {
+            $rawParams = trim($matches[1]);
+            $params    = $this->parseTemplateParams($rawParams);
+            return $this->renderInfoboxPostac($params);
+        },
+        $content
+    );
+
+    return $content;
+}
+
+
+    // === KARTY POSTACI ===
+private function parseCharacters(string $content): string {
+    // {{char|John Macmillan|/wiki/John_Macmillan|chars/john_macmillan.png|Dowódca, USA}}
+    $pattern = '/\{\{char\|([^|]+)\|([^|]+)\|([^|]+)\|([^}]+)\}\}/';
+
+    return preg_replace_callback($pattern, function($m) {
+        $name = trim($m[1]);
+        $url  = trim($m[2]);
+        $img  = trim($m[3]);
+        $role = trim($m[4]);
+
+        return '
+        <div class="character-card">
+          <a href="'.htmlspecialchars($url).'">
+            <div class="character-portrait">
+              {{image:'.htmlspecialchars($img).'}}
+            </div>
+            <div class="character-name">'.htmlspecialchars($name).'</div>
+            <div class="character-role">'.htmlspecialchars($role).'</div>
+          </a>
+        </div>';
+    }, $content);
+}
+
 
 // === SYMBOLE ===
 private function parseSymbols(string $content): string {
@@ -751,20 +834,36 @@ private function parseLists(string $content): string {
 }
 
 
-    // === LINKI ===
-    private function parseLinks(string $content): string {
-        // [Text](url)
-        $content = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '<a href="$2">$1</a>', $content);
+// === LINKI ===
+private function parseLinks(string $content): string {
+    // [Text](url)
+    $content = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '<a href="$2">$1</a>', $content);
 
-        // [[Internal Page]]
-        $content = preg_replace_callback('/\[\[([^\]]+)\]\]/', function($matches) {
-            $page = trim($matches[1]);
-            $slug = $this->slugify($page);
-            return '<a href="/page/' . $slug . '">' . htmlspecialchars($page) . '</a>';
-        }, $content);
+    // [[Internal Page]] lub [[Internal Page|Label]]
+    $content = preg_replace_callback('/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/u', function($matches) {
+        $page  = trim($matches[1]);                               // np. "Kradzież Stali"
+        $label = isset($matches[2]) && $matches[2] !== ''
+            ? trim($matches[2])
+            : $page;
 
-        return $content;
-    }
+        // najpierw transliteracja polskich znaków
+        $map = [
+            'ą'=>'a','ć'=>'c','ę'=>'e','ł'=>'l','ń'=>'n','ó'=>'o','ś'=>'s','ż'=>'z','ź'=>'z',
+            'Ą'=>'A','Ć'=>'C','Ę'=>'E','Ł'=>'L','Ń'=>'N','Ó'=>'O','Ś'=>'S','Ż'=>'Z','Ź'=>'Z',
+        ];
+        $pageForSlug = strtr($page, $map);
+
+        // a potem Twój istniejący slugify
+        $slug = $this->slugify($pageForSlug);                     // "kradziez-stali"
+
+        return '<a href="/page/' . htmlspecialchars($slug) . '">' .
+               htmlspecialchars($label) .
+               '</a>';
+    }, $content);
+
+    return $content;
+}
+
 
     // === KOD (INLINE) ===
     private function parseCode(string $content): string {
@@ -936,153 +1035,220 @@ private function parseInfobox(string $content): string
     }
 
 
-// === RENDER: INFOBOX POSTAĆ ===
-private function renderInfoboxPostac(array $params): string {
-    $imie = htmlspecialchars($params['imie'] ?? 'Nieznana postać');
-    $zdjecie = htmlspecialchars($params['zdjecie'] ?? '');
-    $wiek = htmlspecialchars($params['wiek'] ?? '-');
-    $pochodzenie = htmlspecialchars($params['pochodzenie'] ?? '');
-    $pochodzenieFlag = $params['pochodzenie_flaga'] ?? '';
-    $dubbing = htmlspecialchars($params['dubbing'] ?? '-');
-    $nacja = $params['nacja'] ?? '';
-    $nacjaAlt = htmlspecialchars($params['nacja_alt'] ?? 'Nacja');
-    $stopien = $params['stopien'] ?? '-'; // Nie escapuj jeszcze
-    $profesja = htmlspecialchars($params['profesja'] ?? '-');
-    
-    // Umiejętności
-    $zolnierz = $params['zolnierz'] ?? '';
-    $inzynier = $params['inzynier'] ?? '';
-    $mechanik = $params['mechanik'] ?? '';
-    $naukowiec = $params['naukowiec'] ?? '';
-    
-    // Formatuj stopień - zamień - na <br> i dodaj listę
-    $stopienFormatted = $this->formatMultilineField($stopien);
-    
-    $html = '<div class="infobox infobox-postac">';
-    
-    // Nagłówek
-    $html .= '<div class="infobox-header">' . $imie . '</div>';
-    
-    // Zdjęcie
-    if (!empty($zdjecie)) {
-        $html .= '<div class="infobox-image">';
-        $html .= '<img src="' . htmlspecialchars($zdjecie) . '" alt="' . $imie . '">';
-        $html .= '</div>';
-    }
-    
-    // Podstawowe informacje
-    $html .= '<div class="infobox-section">';
-    
-    // Wiek
-    $html .= '<div class="infobox-row">';
-    $html .= '<span class="infobox-label">Wiek:</span> ';
-    $html .= '<span class="infobox-value">' . htmlspecialchars($wiek) . '</span>';
-    $html .= '</div>';
-    
-// Pochodzenie z flagą
-$html .= '<div class="infobox-row">';
-$html .= '<span class="infobox-label">Pochodzenie:</span> ';
-$html .= '<span class="infobox-value">';
+private function parseRightImage(string $content): string
+{
+    $pattern = '/\{\{right-image\s*(.*?)\}\}/is';
 
-if (!empty($pochodzenieFlag)) {
-    // Wstaw tag {{flag:...}} który zostanie sparsowany później
-    $html .= '{{flag:' . $pochodzenieFlag . '}} ';
+    return preg_replace_callback($pattern, function ($m) {
+        $paramsRaw = $m[1];
+        $params = [];
+
+        preg_match_all('/\|\s*([a-z_]+)\s*=\s*(.*?)(?=\n\|\s*[a-z_]+\s*=|\}\}|$)/is',
+            $paramsRaw, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $key = trim($match[1]);
+            $value = trim($match[2]);
+            $params[$key] = $value;
+        }
+
+        $src     = $params['src']     ?? '';
+        $caption = $params['caption'] ?? '';
+        $alt     = $params['alt']     ?? $caption;
+
+        if ($src === '') {
+            return '';
+        }
+
+        return
+            '<figure class="right-image-box">' .
+                '<div class="right-image-inner">' .
+                    '<img src="' . htmlspecialchars($src) . '" alt="' . htmlspecialchars($alt) . '">' .
+                    ($caption !== ''
+                        ? '<figcaption class="right-image-caption">' . htmlspecialchars($caption) . '</figcaption>'
+                        : ''
+                    ) .
+                '</div>' .
+            '</figure>';
+    }, $content);
 }
 
-$html .= htmlspecialchars($pochodzenie);
-$html .= '</span>';
-$html .= '</div>';
 
-    
-    // Dubbing
-    $html .= '<div class="infobox-row">';
-    $html .= '<span class="infobox-label">Dubbing:</span> ';
-    $html .= '<span class="infobox-value">' . htmlspecialchars($dubbing) . '</span>';
-    $html .= '</div>';
-    
-    $html .= '</div>';
-    
-    // Separator
-    $html .= '<div class="infobox-separator">Informacje</div>';
-    
-    // Informacje wojskowe
+private function renderInfoboxPostac(array $params): string {
+    $imie        = htmlspecialchars($params['imie'] ?? 'Nieznana postać');
+    $zdjecie     = htmlspecialchars($params['zdjecie'] ?? '');
+    $wiekRaw     = trim($params['wiek'] ?? '');            // ← bez '-'
+    $pochodzenie = trim($params['pochodzenie'] ?? '');
+    $pochodzenieFlag = $params['pochodzenie_flaga'] ?? '';
+    $dubbingRaw  = trim($params['dubbing'] ?? '');
+    $nacja       = $params['nacja'] ?? '';
+    $nacjaAlt    = htmlspecialchars($params['nacja_alt'] ?? 'Nacja');
+
+    $stopien       = trim($params['stopien']  ?? '');
+    $stopienLabel  = htmlspecialchars($params['stopien_label'] ?? 'Stopień:');
+
+    $stopienEx      = trim($params['stopienEx'] ?? '');
+    $stopienLabel2  = htmlspecialchars($params['stopien_labelEx'] ?? '');
+
+    $profesjaRaw = trim($params['profesja'] ?? '');
+
+    // Umiejętności
+    $zolnierz  = $params['zolnierz'] ?? '';
+    $inzynier  = $params['inzynier'] ?? '';
+    $mechanik  = $params['mechanik'] ?? '';
+    $naukowiec = $params['naukowiec'] ?? '';
+
+    // Formatuj stopnie tylko jeśli coś jest
+    $stopienFormatted    = $stopien    !== '' ? $this->formatMultilineField($stopien)    : '';
+    $stopienExFormatted  = $stopienEx  !== '' ? $this->formatMultilineField($stopienEx)  : '';
+
+    $html = '<div class="infobox infobox-postac">';
+
+    // Nagłówek
+    $html .= '<div class="infobox-header">' . $imie . '</div>';
+
+    // Zdjęcie
+    if ($zdjecie !== '') {
+        $html .= '<div class="infobox-image">';
+        $html .= '<img src="' . $zdjecie . '" alt="' . $imie . '">';
+        $html .= '</div>';
+    }
+
+    // Podstawowe informacje
     $html .= '<div class="infobox-section">';
-    
-    // Nacja
-    if (!empty($nacja)) {
+
+    // Wiek – tylko jeśli podany
+    if ($wiekRaw !== '') {
         $html .= '<div class="infobox-row">';
-        $html .= '<span class="infobox-label">Nacja:</span> ';
+        $html .= '<span class="infobox-label">Wiek:</span> ';
+        $html .= '<span class="infobox-value">' . htmlspecialchars($wiekRaw) . '</span>';
+        $html .= '</div>';
+    }
+
+    // Pochodzenie z flagą – tylko jeśli jest flaga lub tekst
+    if ($pochodzenieFlag !== '' || $pochodzenie !== '') {
+        $html .= '<div class="infobox-row">';
+        $html .= '<span class="infobox-label">Pochodzenie:</span> ';
         $html .= '<span class="infobox-value">';
-        $html .= '<img src="/symbols/' . htmlspecialchars($nacja) . '.png" alt="' . $nacjaAlt . '" class="infobox-icon"> ';
-        $html .= $nacjaAlt;
+        if ($pochodzenieFlag !== '') {
+            $html .= '{{flag:' . $pochodzenieFlag . '}} ';
+        }
+        $html .= htmlspecialchars($pochodzenie);
         $html .= '</span>';
         $html .= '</div>';
     }
-    
-// Stopień - wielolinijkowy
-$stopienFormatted = $this->formatMultilineField($stopien);
 
-// Sprawdź czy zawiera <br> (wieloliniowy)
-if (strpos($stopienFormatted, '<br>') !== false) {
-    $html .= '<div class="infobox-row infobox-row-stacked">';
-    $html .= '<span class="infobox-label">Stopień:</span>';
-    $html .= '<div class="infobox-value-multi">' . $stopienFormatted . '</div>';
-    $html .= '</div>';
-} else {
-    $html .= '<div class="infobox-row">';
-    $html .= '<span class="infobox-label">Stopień:</span> ';
-    $html .= '<span class="infobox-value">' . $stopienFormatted . '</span>';
-    $html .= '</div>';
-}
-
-
-
-    
-    // Profesja
-    $html .= '<div class="infobox-row">';
-    $html .= '<span class="infobox-label">Profesja:</span> ';
-    $html .= '<span class="infobox-value">' . htmlspecialchars($profesja) . '</span>';
-    $html .= '</div>';
-    
-    $html .= '</div>';
-    
-    // Umiejętności (bez zmian)
-    $html .= '<div class="infobox-separator">Umiejętności początkowe</div>';
-    $html .= '<div class="infobox-section infobox-skills-section">';
-    
-    if (!empty($zolnierz)) {
-        $html .= '<div class="infobox-skill-row">';
-        $html .= '<span class="infobox-skill-label">Żołnierz:</span>';
-        $html .= '<img src="/symbols/' . htmlspecialchars($zolnierz) . '.png" alt="Żołnierz" class="infobox-skill-icon">';
+    // Dubbing – tylko jeśli podany
+    if ($dubbingRaw !== '') {
+        $html .= '<div class="infobox-row">';
+        $html .= '<span class="infobox-label">Dubbing:</span> ';
+        $html .= '<span class="infobox-value">' . htmlspecialchars($dubbingRaw) . '</span>';
         $html .= '</div>';
     }
-    
-    if (!empty($inzynier)) {
-        $html .= '<div class="infobox-skill-row">';
-        $html .= '<span class="infobox-skill-label">Inżynier:</span>';
-        $html .= '<img src="/symbols/' . htmlspecialchars($inzynier) . '.png" alt="Inżynier" class="infobox-skill-icon">';
-        $html .= '</div>';
+
+    $html .= '</div>'; // /infobox-section
+
+    // Separator tylko jeśli cokolwiek poniżej istnieje
+    if ($nacja !== '' || $stopienFormatted !== '' || $stopienExFormatted !== '' || $profesjaRaw !== '') {
+        $html .= '<div class="infobox-separator">Informacje</div>';
+        $html .= '<div class="infobox-section">';
+
+        // Nacja
+        if ($nacja !== '') {
+            $html .= '<div class="infobox-row">';
+            $html .= '<span class="infobox-label">Nacja:</span> ';
+            $html .= '<span class="infobox-value">';
+            $html .= '<img src="/symbols/' . htmlspecialchars($nacja) . '.png" alt="' . $nacjaAlt . '" class="infobox-icon"> ';
+            $html .= $nacjaAlt;
+            $html .= '</span>';
+            $html .= '</div>';
+        }
+
+        // STOPIEŃ 1
+        if ($stopienFormatted !== '') {
+            if (strpos($stopienFormatted, '<br>') !== false) {
+                $html .= '<div class="infobox-row infobox-row-stacked">';
+                $html .= '<span class="infobox-label">' . $stopienLabel . '</span>';
+                $html .= '<div class="infobox-value-multi">' . $stopienFormatted . '</div>';
+                $html .= '</div>';
+            } else {
+                $html .= '<div class="infobox-row">';
+                $html .= '<span class="infobox-label">' . $stopienLabel . '</span> ';
+                $html .= '<span class="infobox-value">' . $stopienFormatted . '</span>';
+                $html .= '</div>';
+            }
+        }
+
+        // STOPIEŃ EX (opcjonalny)
+        if ($stopienExFormatted !== '') {
+            $label2 = $stopienLabel2 !== '' ? $stopienLabel2 : $stopienLabel;
+            if (strpos($stopienExFormatted, '<br>') !== false) {
+                $html .= '<div class="infobox-row infobox-row-stacked">';
+                $html .= '<span class="infobox-label">' . $label2 . '</span>';
+                $html .= '<div class="infobox-value-multi">' . $stopienExFormatted . '</div>';
+                $html .= '</div>';
+            } else {
+                $html .= '<div class="infobox-row">';
+                $html .= '<span class="infobox-label">' . $label2 . '</span> ';
+                $html .= '<span class="infobox-value">' . $stopienExFormatted . '</span>';
+                $html .= '</div>';
+            }
+        }
+
+        // Profesja
+        if ($profesjaRaw !== '') {
+            $html .= '<div class="infobox-row">';
+            $html .= '<span class="infobox-label">Profesja:</span> ';
+            $html .= '<span class="infobox-value">' . htmlspecialchars($profesjaRaw) . '</span>';
+            $html .= '</div>';
+        }
+
+        $html .= '</div>'; // /infobox-section
     }
-    
-    if (!empty($mechanik)) {
-        $html .= '<div class="infobox-skill-row">';
-        $html .= '<span class="infobox-skill-label">Mechanik:</span>';
-        $html .= '<img src="/symbols/' . htmlspecialchars($mechanik) . '.png" alt="Mechanik" class="infobox-skill-icon">';
-        $html .= '</div>';
+
+    // Umiejętności – sekcja tylko jeśli coś jest
+    if ($zolnierz || $inzynier || $mechanik || $naukowiec) {
+        $html .= '<div class="infobox-separator">Umiejętności początkowe</div>';
+        $html .= '<div class="infobox-section infobox-skills-section">';
+
+        if (!empty($zolnierz)) {
+            $html .= '<div class="infobox-skill-row">';
+            $html .= '<span class="infobox-skill-label">Żołnierz:</span>';
+            $html .= '<img src="/symbols/' . htmlspecialchars($zolnierz) . '.png" alt="Żołnierz" class="infobox-skill-icon">';
+            $html .= '</div>';
+        }
+
+        if (!empty($inzynier)) {
+            $html .= '<div class="infobox-skill-row">';
+            $html .= '<span class="infobox-skill-label">Inżynier:</span>';
+            $html .= '<img src="/symbols/' . htmlspecialchars($inzynier) . '.png" alt="Inżynier" class="infobox-skill-icon">';
+            $html .= '</div>';
+        }
+
+        if (!empty($mechanik)) {
+            $html .= '<div class="infobox-skill-row">';
+            $html .= '<span class="infobox-skill-label">Mechanik:</span>';
+            $html .= '<img src="/symbols/' . htmlspecialchars($mechanik) . '.png" alt="Mechanik" class="infobox-skill-icon">';
+            $html .= '</div>';
+        }
+
+        if (!empty($naukowiec)) {
+            $html .= '<div class="infobox-skill-row">';
+            $html .= '<span class="infobox-skill-label">Naukowiec:</span>';
+            $html .= '<img src="/symbols/' . htmlspecialchars($naukowiec) . '.png" alt="Naukowiec" class="infobox-skill-icon">';
+            $html .= '</div>';
+        }
+
+        $html .= '</div>'; // /infobox-skills-section
     }
-    
-    if (!empty($naukowiec)) {
-        $html .= '<div class="infobox-skill-row">';
-        $html .= '<span class="infobox-skill-label">Naukowiec:</span>';
-        $html .= '<img src="/symbols/' . htmlspecialchars($naukowiec) . '.png" alt="Naukowiec" class="infobox-skill-icon">';
-        $html .= '</div>';
-    }
-    
-    $html .= '</div>';
-    $html .= '</div>';
-    
+
+    $html .= '</div>'; // /infobox
+
     return $html;
+
 }
+
+
 
 /**
  * Sprawdź czy pole jest wielolinijkowe

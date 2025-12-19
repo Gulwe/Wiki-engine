@@ -767,12 +767,6 @@ ol li::marker {
     color: var(--text-secondary);
 }
 
-.infobox-skill-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    /* border: 1px solid var(--border-subtle); */ 
-}
 
 /* Responsywność */
 @media (max-width: 968px) {
@@ -827,7 +821,7 @@ ol li::marker {
 }
 
 .infobox-skill-icon {
-    width: 32px;
+    width: auto;
     height: 32px;
     border-radius: 4px;
     /* border: 1px solid var(--border-subtle); */
@@ -1324,3 +1318,201 @@ ol li::marker {
         font-size: 14px;
     }
 }
+
+/* Obrazek po prawej z podpisem */
+.right-image-box {
+    float: right;
+    width: 40%;
+    max-width: 520px;
+    margin: 0 0 20px 30px;
+    clear: right;   /* to jest klucz */
+}
+
+
+.right-image-inner {
+    background: var(--card-bg);
+    border: 2px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: var(--shadow-sm);
+}
+
+.right-image-inner img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.right-image-caption {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Na telefonach – obrazek pod tekstem, na pełną szerokość */
+@media (max-width: 900px) {
+    .right-image-box {
+        float: none;
+        width: 100%;
+        max-width: 100%;
+        margin: 20px 0;
+    }
+}
+
+
+/* Kontener spisu treści */
+.wiki-toc {
+    margin: 24px 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+
+    background: radial-gradient(circle at top left,
+                rgba(255, 255, 255, 0.06),
+                rgba(0, 0, 0, 0.65));
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.80);
+
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Tytuł */
+.wiki-toc > strong {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 10px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+/* Lista pozycji */
+.wiki-toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wiki-toc li {
+    margin: 2px 0;
+}
+
+/* Wcięcia poziomów nagłówków (dopasuj do klas z JS) */
+.wiki-toc li.level-1 { padding-left: 0; }
+.wiki-toc li.level-2 { padding-left: 14px; }
+.wiki-toc li.level-3 { padding-left: 28px; }
+
+/* Linki */
+.wiki-toc a {
+    display: block;
+    padding: 2px 0 2px 6px;
+
+    color: var(--text-primary);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+
+    transition: color 0.15s ease,
+                border-color 0.15s ease,
+                background 0.15s ease,
+                transform 0.08s ease;
+}
+
+.wiki-toc a:hover {
+    color: var(--accent-primary);
+    border-left-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.04);
+    transform: translateX(2px);
+}
+
+/* Na wąskich ekranach – pełna szerokość, mniejszy cień */
+@media (max-width: 900px) {
+    .wiki-toc {
+        margin: 16px 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+}
+
+.characters-page h1 {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+/* Taby już masz – ewentualnie tylko odstęp */
+.characters-page .nation-tabs {
+    justify-content: center;
+    margin-bottom: 18px;
+}
+
+/* Kontenery nacji */
+.nation-content {
+    display: none;
+    padding: 18px 20px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.nation-content.active {
+    display: block;
+}
+
+.nation-content > h2 {
+    text-align: center;
+    margin: 0 0 14px;
+    font-size: 16px;
+}
+
+/* Grid portretów */
+.character-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;   /* rzędy będą wyśrodkowane */
+}
+
+.character-grid .char-card {
+    width: 150px;              /* lub ile tam masz */
+    text-align: center;
+}
+
+.character-name {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* Jeśli character-card generuje np. .character-card */
+.character-card {
+    text-align: center;
+    font-size: 13px;
+}
+
+.character-card img {
+    display: block;
+    object-fit: cover;
+    margin: 0 auto 4px;
+}
+
+.char-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;          /* odstęp między portretami */
+    justify-content: center;
+}
+
+.char-grid .char-card {  /* klasa na wrappera wewnątrz {{char}} */
+    width: 150px;        /* szerokość jednego portretu */
+    text-align: center;
+}
+
+
+
+

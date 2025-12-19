@@ -427,6 +427,110 @@ if (preg_match('#^/page/([a-z0-9-]+)$#', $uri, $matches)) {
     exit;
 }
 
+// public/index.php lub router
+
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// ----------------------------------------------------------------------------
+// LISTA WSZYSTKICH STRON  ->  /pages
+// ----------------------------------------------------------------------------
+if ($uri === '/pages') {
+    $pageModel = new Page();
+
+    $perPage     = 20;
+    $currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $offset      = ($currentPage - 1) * $perPage;
+
+    $categoryFilter = isset($_GET['category']) ? (int)$_GET['category'] : null;
+    $sortBy         = isset($_GET['sort']) ? $_GET['sort'] : 'updated'; // updated, created, title, views
+
+    $db = Database::getInstance()->getConnection();
+
+    // WHERE
+    $whereClause = '';
+    $params      = [];
+
+    if ($categoryFilter) {
+        $whereClause             = 'WHERE pc.category_id = :category_id';
+        $params['category_id']   = $categoryFilter;
+    }
+
+    // ORDER BY
+    switch ($sortBy) {
+        case 'created':
+            $orderClause = 'p.created_at DESC';
+            break;
+        case 'title':
+            $orderClause = 'p.title ASC';
+            break;
+        case 'views':
+            $orderClause = 'p.views DESC';
+            break;
+        default:
+            $orderClause = 'p.updated_at DESC';
+            break;
+    }
+
+    // QUERY – listowanie stron
+    $sql = "
+        SELECT p.*, u.username AS author, c.name AS category_name
+        FROM pages p
+        LEFT JOIN users u ON p.created_by = u.user_id
+        LEFT JOIN page_categories pc ON p.page_id = pc.page_id
+        LEFT JOIN categories c ON pc.category_id = c.category_id
+        $whereClause
+        GROUP BY p.page_id
+        ORDER BY $orderClause
+        LIMIT :limit OFFSET :offset
+    ";
+
+    $stmt = $db->prepare($sql);
+    foreach ($params as $key => $val) {
+        $stmt->bindValue(':'.$key, $val, PDO::PARAM_INT);
+    }
+    $stmt->bindValue(':limit',  $perPage,     PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset,      PDO::PARAM_INT);
+    $stmt->execute();
+    $pages = $stmt->fetchAll();
+
+    // LICZENIE DO PAGINACJI
+    $countSql = "
+        SELECT COUNT(DISTINCT p.page_id)
+        FROM pages p
+        LEFT JOIN page_categories pc ON p.page_id = pc.page_id
+        $whereClause
+    ";
+
+    $countStmt = $db->prepare($countSql);
+    foreach ($params as $key => $val) {
+        $countStmt->bindValue(':'.$key, $val, PDO::PARAM_INT);
+    }
+    $countStmt->execute();
+    $totalPages       = (int) $countStmt->fetchColumn();
+    $totalPagesCount  = (int) ceil($totalPages / $perPage);
+
+    // KATEGORIE DO FILTRA
+    $categories = $db->query("
+        SELECT c.*, COUNT(pc.page_id) AS pages_count
+        FROM categories c
+        LEFT JOIN page_categories pc ON c.category_id = pc.category_id
+        GROUP BY c.category_id
+        ORDER BY c.name ASC
+    ")->fetchAll();
+
+    View::render('pages-list', [
+        'pageTitle'       => 'Wszystkie strony',
+        'pages'           => $pages,
+        'categories'      => $categories,
+        'currentPage'     => $currentPage,
+        'totalPagesCount' => $totalPagesCount,
+        'sortBy'          => $sortBy,
+        'categoryFilter'  => $categoryFilter,
+    ]);
+    exit;
+}
+
+
 // ========================================
 // === ROUTING - KATEGORIE ===
 // ========================================

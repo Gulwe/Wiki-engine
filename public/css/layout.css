@@ -1711,3 +1711,69 @@ header {
         grid-template-columns: 1fr;
     }
 }
+
+.pages-filter {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.pages-filter input[type="text"],
+.pages-filter select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(15, 23, 42, 0.8);
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    outline: none;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.pages-filter input::placeholder {
+    color: rgba(148, 163, 184, 0.9);
+}
+
+.pages-filter input[type="text"]:focus,
+.pages-filter select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6);
+    background: rgba(15, 23, 42, 0.95);
+}
+
+/* strzałka selecta */
+.pages-filter select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #e2e8f0 50%),
+        linear-gradient(135deg, #e2e8f0 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 3px),
+        calc(100% - 12px) calc(50% - 3px);
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 2.5rem;
+}
+
+/* dopasowanie przycisku szukaj */
+.pages-filter .btn.btn-primary {
+    padding: 0.85rem 1.75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+    .pages-filter {
+        grid-template-columns: 1fr;
+    }
+}
+
+

@@ -7,20 +7,28 @@
         <h1>📄 Wszystkie strony</h1>
         
         <form method="GET" class="pages-filter">
-            <input type="text" name="search" placeholder="Szukaj..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+            <input
+                type="text"
+                name="search"
+                placeholder="Szukaj..."
+                value="<?= htmlspecialchars($search ?? '') ?>"
+            >
+
             <select name="category">
                 <option value="">Wszystkie kategorie</option>
-                <?php
-                $db = Database::getInstance()->getConnection();
-                $cats = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
-                foreach ($cats as $cat):
-                    $selected = isset($_GET['category']) && $_GET['category'] == $cat['category_id'] ? 'selected' : '';
-                ?>
-                    <option value="<?= $cat['category_id'] ?>" <?= $selected ?>>
+                <?php foreach ($categories as $cat): ?>
+                    <?php
+                        $selected = isset($categoryFilter) && (int)$categoryFilter === (int)$cat['category_id']
+                            ? 'selected'
+                            : '';
+                    ?>
+                    <option value="<?= (int)$cat['category_id'] ?>" <?= $selected ?>>
                         <?= htmlspecialchars($cat['name']) ?>
+                        (<?= (int)($cat['pages_count'] ?? 0) ?>)
                     </option>
                 <?php endforeach; ?>
             </select>
+
             <button type="submit" class="btn btn-primary">🔍 Szukaj</button>
         </form>
     </header>
@@ -31,12 +39,19 @@
         <ul class="page-list">
             <?php foreach ($pages as $page): ?>
                 <li class="page-list-item">
-                    <a href="/page/<?= htmlspecialchars($page['slug']) ?>" class="page-list-item-link">
-                        <h3 class="page-list-item-title"><?= htmlspecialchars($page['title']) ?></h3>
+                    <a
+                        href="/page/<?= htmlspecialchars($page['slug']) ?>"
+                        class="page-list-item-link"
+                    >
+                        <h3 class="page-list-item-title">
+                            <?= htmlspecialchars($page['title']) ?>
+                        </h3>
                         
                         <div class="page-list-item-meta">
-                            <?php if (!empty($page['category'])): ?>
-                                <span class="page-category-pill"><?= htmlspecialchars($page['category']) ?></span>
+                            <?php if (!empty($page['category_name'])): ?>
+                                <span class="page-category-pill">
+                                    <?= htmlspecialchars($page['category_name']) ?>
+                                </span>
                             <?php endif; ?>
                             
                             <span class="page-list-author">
@@ -55,18 +70,33 @@
         </ul>
 
         <!-- Paginacja -->
-        <?php if ($totalPages > 1): ?>
+        <?php if (!empty($totalPagesCount) && $totalPagesCount > 1): ?>
+            <?php
+                // budujemy query string bez parametru page
+                $baseQuery = $_GET;
+                unset($baseQuery['page']);
+                $baseQueryString = http_build_query($baseQuery);
+                $baseUrl = $baseQueryString ? ('?' . $baseQueryString . '&') : '?';
+            ?>
             <div class="pagination">
                 <?php if ($currentPage > 1): ?>
-                    <a href="?page=<?= $currentPage - 1 ?><?= !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '' ?>" class="btn btn-outline">
+                    <a
+                        href="<?= $baseUrl . 'page=' . ($currentPage - 1) ?>"
+                        class="btn btn-outline"
+                    >
                         ← Poprzednia
                     </a>
                 <?php endif; ?>
                 
-                <span class="pagination-info">Strona <?= $currentPage ?> z <?= $totalPages ?></span>
+                <span class="pagination-info">
+                    Strona <?= (int)$currentPage ?> z <?= (int)$totalPagesCount ?>
+                </span>
                 
-                <?php if ($currentPage < $totalPages): ?>
-                    <a href="?page=<?= $currentPage + 1 ?><?= !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '' ?>" class="btn btn-outline">
+                <?php if ($currentPage < $totalPagesCount): ?>
+                    <a
+                        href="<?= $baseUrl . 'page=' . ($currentPage + 1) ?>"
+                        class="btn btn-outline"
+                    >
                         Następna →
                     </a>
                 <?php endif; ?>
