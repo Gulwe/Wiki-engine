@@ -57,7 +57,7 @@
     
     <div class="footer-bottom">
         <p>
-© 2012-<?= date('Y') ?> SoSteam - Wszelkie prawa zastrzeżone. + Powered by "<?= htmlspecialchars(ThemeLoader::get('site_name', 'Wiki Engine')) ?>"
+© 2012-<?= date('Y') ?> SoSteam - Wszelkie prawa zastrzeżone. + Powered by "GWiki"
 
         </p>
     </div>

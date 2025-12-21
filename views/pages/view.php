@@ -69,9 +69,6 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
 
             <?php endif; ?>
 
-            <a href="#" onclick="window.print(); return false;"
-               class="btn"
-               style="background: rgba(74, 222, 128, 0.2); border-color: #4ade80;">🖨️ Drukuj</a>
             <a href="/" class="btn">🏠 Strona główna</a>
         </div>
     </div>

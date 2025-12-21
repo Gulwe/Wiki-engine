@@ -658,9 +658,118 @@ private function parseTemplates(string $content): string {
         },
         $content
     );
+    // === MAPA INTERAKTYWNA ===
+$content = preg_replace_callback(
+    '/\{\{mapa\s*(.*?)\}\}/si',
+    function ($matches) {
+        $rawParams = trim($matches[1]);
+        $params    = $this->parseTemplateParams($rawParams);
+        return $this->renderMap($params);
+    },
+    $content
+);
+// === PRZYCISK POWROTU ===
+$content = preg_replace_callback(
+    '/\{\{back-button\s*(.*?)\}\}/si',
+    function ($matches) {
+        $raw    = trim($matches[1]);
+        $params = $this->parseTemplateParams($raw);
+        return $this->renderBackButton($params);
+    },
+    $content
+);
+
+
+
 
     return $content;
 }
+
+private function renderBackButton(array $params): string
+{
+    $href = trim($params['href'] ?? '');
+    if ($href === '') {
+        return '';
+    }
+
+    $label  = trim($params['label'] ?? 'Wróć');
+    $symbol = trim($params['symbol'] ?? 'arrow-left');
+    // sanity check – tylko bezpieczne znaki w nazwie symbolu
+    $symbol = preg_replace('/[^a-zA-Z0-9_-]/', '', $symbol);
+
+    $hrefEsc  = htmlspecialchars($href, ENT_QUOTES);
+    $labelEsc = htmlspecialchars($label, ENT_QUOTES);
+
+    $innerIcon = '{{symbol:' . $symbol . '|' . $labelEsc . '}}';
+
+    return '<div class="wiki-back-button">'
+         .   '<a href="' . $hrefEsc . '">'
+         .     $innerIcon
+         .     '<span class="wiki-back-label">' . $labelEsc . '</span>'
+         .   '</a>'
+         . '</div>';
+}
+
+
+// === RENDER: MAPA INTERAKTYWNA ===
+private function renderMap(array $params): string
+{
+    $src = trim($params['src'] ?? '');
+    if ($src === '') {
+        return '';
+    }
+
+    $width  = (int)($params['width']  ?? 800);
+    $height = (int)($params['height'] ?? 600);
+
+    $points = [];
+
+    foreach ($params as $key => $value) {
+        if (strpos($key, 'point') === 0 && trim($value) !== '') {
+            // x;y;href;title;symbol?
+            $parts = array_map('trim', explode(';', $value, 5));
+            if (count($parts) < 3) {
+                continue;
+            }
+
+            $points[] = [
+                'x'      => rtrim($parts[0], '%'),
+                'y'      => rtrim($parts[1], '%'),
+                'href'   => $parts[2],
+                'title'  => $parts[3] ?? '',
+                'symbol' => $parts[4] ?? 'map-marker',
+            ];
+        }
+    }
+
+    $html  = '<div class="wiki-map" style="--map-w:' . $width . ';--map-h:' . $height . ';';
+    $html .= 'background-image:url(\'' . htmlspecialchars($src, ENT_QUOTES) . '\')">';
+
+    foreach ($points as $p) {
+        $x = (float)$p['x'];
+        $y = (float)$p['y'];
+        $href   = htmlspecialchars($p['href'], ENT_QUOTES);
+        $title  = $p['title'] ?? '';
+        $titleEsc = htmlspecialchars($title, ENT_QUOTES);
+        $symbol = preg_replace('/[^a-zA-Z0-9_-]/', '', $p['symbol'] ?? 'map-marker');
+
+        // ikona + etykieta (tooltip na mapie)
+        $innerIcon  = '{{symbol:' . $symbol . '|' . $title . '}}';
+        $innerLabel = $title !== '' ? '<span class="wiki-map-label">' . $titleEsc . '</span>' : '';
+
+        $html .= '<a class="wiki-map-point" href="' . $href . '"'
+              .  ' style="left:' . $x . '%;top:' . $y . '%;">'
+              .       $innerIcon . $innerLabel
+              .  '</a>';
+    }
+
+    $html .= '</div>';
+
+    return $html;
+}
+
+
+
 
 
     // === KARTY POSTACI ===
@@ -672,7 +781,6 @@ private function parseCharacters(string $content): string {
         $name = trim($m[1]);
         $url  = trim($m[2]);
         $img  = trim($m[3]);
-        $role = trim($m[4]);
 
         return '
         <div class="character-card">
@@ -681,7 +789,6 @@ private function parseCharacters(string $content): string {
               {{image:'.htmlspecialchars($img).'}}
             </div>
             <div class="character-name">'.htmlspecialchars($name).'</div>
-            <div class="character-role">'.htmlspecialchars($role).'</div>
           </a>
         </div>';
     }, $content);
