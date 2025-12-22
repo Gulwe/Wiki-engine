@@ -49,7 +49,7 @@
 
 .wiki-image img:hover {
     transform: scale(1.02);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-main);
     box-shadow: var(--shadow-lg);
 }
 
@@ -196,22 +196,23 @@ code {
 
 /* Quotes */
 .wiki-quote {
-    border-left: 4px solid var(--accent-primary);
-    padding: 15px 20px;
-    margin: 20px 0;
+    border-left: 4px solid var(--accent-main);
+    padding: 12px 18px;
+    margin: 18px 0;
     background: rgba(0, 0, 0, 0.15);
     font-style: italic;
     color: var(--text-secondary);
     border-radius: 8px;
 }
 
-.wiki-quote::before {
-    content: '"';
-    font-size: 48px;
-    color: rgba(0, 0, 0, 0.25);
-    line-height: 0;
-    margin-right: 10px;
+/* najważniejsze – zerujemy marginesy w środku */
+.wiki-quote > *:first-child {
+    margin-top: 0;
 }
+.wiki-quote > *:last-child {
+    margin-bottom: 0;
+}
+
 
 /* Sidebar / Infobox */
 .wiki-sidebar {
@@ -293,11 +294,11 @@ ul li, ol li {
 }
 
 ul li::marker {
-    color: var(--accent-primary);
+    color: var(--accent-main);
 }
 
 ol li::marker {
-    color: var(--accent-primary);
+    color: var(--accent-main);
     font-weight: 700;
 }
 
@@ -417,7 +418,7 @@ ol li::marker {
 
 .nav-links a:hover {
     color: var(--accent-hover);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-main);
 }
 
 /* Ogólny „notice” / info box (np. na górze strony) */
@@ -1035,7 +1036,7 @@ ol li::marker {
     content: '•';
     position: absolute;
     left: 0;
-    color: var(--accent-primary, #8b5cf6);
+    color: var(--accent-main, #8b5cf6);
     font-weight: bold;
     font-size: 1.2em;
 }
@@ -1097,7 +1098,7 @@ ol li::marker {
 
 .infobox-value-multi-icon .multi-line-item::before {
     content: '→';
-    color: var(--accent-primary, #8b5cf6);
+    color: var(--accent-main, #8b5cf6);
     font-weight: bold;
     font-size: 1.1em;
 }
@@ -1423,8 +1424,8 @@ ol li::marker {
 }
 
 .wiki-toc a:hover {
-    color: var(--accent-primary);
-    border-left-color: var(--accent-primary);
+    color: var(--accent-main);
+    border-left-color: var(--accent-main);
     background: rgba(255, 255, 255, 0.04);
     transform: translateX(2px);
 }
@@ -1575,20 +1576,135 @@ ol li::marker {
     gap: 6px;
     padding: 6px 10px;
     border-radius: 4px;
-    background: rgba(5,15,25,0.8);
+    background: var(--card-bg);
     color: #fff;
     font-size: 13px;
     text-decoration: none;
 }
 
 .wiki-back-button a:hover {
-    background: rgba(10,25,40,0.95);
+    background: var(--card-bg-soft);
 }
 
 .wiki-back-button .wiki-symbol {
-    width: 50px;
-    height: 50px;
+    width: auto;
+}
+
+.mod-card {
+    display: flex;
+    gap: 16px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.mod-card-thumb img {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.mod-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.mod-card-title {
+    margin: 0 0 4px;
+    font-size: 1rem;
+}
+
+.mod-card-title-link {
+    color: var(--accent-main);
+    text-decoration: none;
+}
+.mod-card-title-link:hover {
+    text-decoration: underline;
+}
+
+.mod-card-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.mod-card-author {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.infobox-baza .infobox-header {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.infobox-baza .infobox-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.infobox-baza .infobox-flag {
+    width: 32px;
+    height: auto;
+    vertical-align: middle;
 }
 
 
+.infobox-baza .infobox-row-nacja .infobox-value-nacja {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.infobox-baza .infobox-value-nacja .wiki-symbol {
+    width: 48px;
+    height: 48px;
+}
+
+.infobox-image-multi {
+    position: relative;
+    overflow: hidden;
+}
+
+.infobox-image-multi img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.infobox-image-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--accent-main)
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.infobox-image-tab {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 4px 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.infobox-image-tab.active {
+    color: var(--accent-main);
+    border-bottom: 2px solid var(--accent-main);
+}
+
+.lore-icon {
+    object-fit: scale-down !important;
+    max-height: 100px !important;
+}

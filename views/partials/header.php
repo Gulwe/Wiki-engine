@@ -151,22 +151,16 @@ $(document).ready(function() {
     $('.dropdown-toggle').on('click', function(e) {
         e.stopPropagation();
         const $menu = $(this).siblings('.dropdown-menu');
-
-        // Zamknij inne
         $('.dropdown-menu').not($menu).removeClass('active');
         $('.theme-dropdown').removeClass('active');
-
-        // Toggle obecne
         $menu.toggleClass('active');
     });
 
-    // Zamknij przy kliknięciu poza
     $(document).on('click', function() {
         $('.dropdown-menu').removeClass('active');
         $('.theme-dropdown').removeClass('active');
     });
 
-    // Mobile menu
     $('#mobile-toggle').on('click', function() {
         $(this).toggleClass('active');
         $('.main-nav').toggleClass('mobile-active');
@@ -175,13 +169,12 @@ $(document).ready(function() {
     // ========================================
     // === CUSTOM THEME SWITCHER ===
     // ========================================
-    const themeSelectorBtn = document.getElementById('theme-selector-btn');
-    const themeDropdown = document.getElementById('theme-dropdown');
-    const currentThemeIcon = document.getElementById('current-theme-icon');
-    const themeOptions = document.querySelectorAll('.theme-option');
-    const THEME_KEY = 'wiki-theme';
+    const themeSelectorBtn  = document.getElementById('theme-selector-btn');
+    const themeDropdown     = document.getElementById('theme-dropdown');
+    const currentThemeIcon  = document.getElementById('current-theme-icon');
+    const themeOptions      = document.querySelectorAll('.theme-option');
+    const THEME_KEY         = 'wiki-theme';
 
-    // Mapa ikon motywów
     const themeIcons = {
         'default': '/symbols/soslogo.png',
         'ru': '/symbols/RU.png',
@@ -189,14 +182,12 @@ $(document).ready(function() {
         'am': '/symbols/AM.png'
     };
 
-    // Funkcja ustawiająca cookie
     function setCookie(name, value, days) {
         const expires = new Date();
         expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
         document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
     }
 
-    // Funkcja odczytująca cookie
     function getCookie(name) {
         const nameEQ = name + '=';
         const ca = document.cookie.split(';');
@@ -208,48 +199,57 @@ $(document).ready(function() {
         return null;
     }
 
+    // --- NOWE: przeładowanie ikon po zmianie motywu ---
+    function reloadThemeIcons(theme) {
+        $.getJSON('/api/theme_icons.php', { theme: theme })
+            .done(function (icons) {
+                $('.lore-icon').each(function () {
+                    const $img = $(this);
+                    const key  = $img.data('category'); // np. "postacie"
+                    if (icons[key]) {
+                        $img.attr('src', icons[key]);
+                    }
+                });
+            })
+            .fail(function () {
+                console.error('Nie udało się pobrać ikon dla motywu', theme);
+            });
+    }
+
     // Funkcja aplikująca motyw
     function applyTheme(theme, reload = false) {
         console.log('Applying theme:', theme);
-        
-        // Ustaw atrybut data-theme
+
         if (theme === 'default') {
             document.documentElement.removeAttribute('data-theme');
         } else {
             document.documentElement.setAttribute('data-theme', theme);
         }
-        
-        // Zapisz do localStorage (dla JS)
+
         localStorage.setItem(THEME_KEY, theme);
-        
-        // Zapisz do cookie (dla PHP)
         setCookie('theme', theme, 365);
-        
-        // Zmień ikonkę w przycisku
+
         currentThemeIcon.src = themeIcons[theme] || themeIcons['default'];
-        
-        // Zamknij dropdown
+
+        // podmień ikony bez przeładowania strony
+        reloadThemeIcons(theme);
+
         themeDropdown.classList.remove('active');
-        
+
         if (reload) {
             location.reload();
         }
     }
 
-    // Załaduj zapisany motyw przy starcie
     const savedTheme = getCookie('theme') || localStorage.getItem(THEME_KEY) || 'default';
     applyTheme(savedTheme, false);
 
-    // Toggle dropdown
     themeSelectorBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         themeDropdown.classList.toggle('active');
-        
-        // Zamknij inne dropdowny
         $('.dropdown-menu').removeClass('active');
     });
 
-    // Wybór motywu
     themeOptions.forEach(option => {
         option.addEventListener('click', function() {
             const theme = this.getAttribute('data-theme');
@@ -257,12 +257,10 @@ $(document).ready(function() {
         });
     });
 
-    // Zamknij dropdown przy kliknięciu poza
     document.addEventListener('click', function() {
         themeDropdown.classList.remove('active');
     });
 
-    // Zapobiegaj zamknięciu przy kliknięciu wewnątrz dropdown
     themeDropdown.addEventListener('click', function(e) {
         e.stopPropagation();
     });

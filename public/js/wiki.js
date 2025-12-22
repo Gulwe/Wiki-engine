@@ -158,6 +158,29 @@ $(document).ready(function() {
             item.removeClass('active');
         }
     });
+
+    // ========================================
+    // INFOBOX POSTAĆ – PRZEŁĄCZANIE ZDJĘĆ
+    // ========================================
+    $(document).on('click', '.infobox-image-tab', function () {
+        const $btn = $(this);
+        const $tabs = $btn.closest('.infobox-image-tabs').find('.infobox-image-tab');
+        const targetSrc = $btn.data('target-src');
+
+        // aktywny stan zakładek
+        $tabs.removeClass('active');
+        $btn.addClass('active');
+
+        // podmień src głównego obrazka w tym samym infoboxie
+        const $infobox = $btn.closest('.infobox');
+        const $mainImg = $infobox.find('.infobox-image-multi img[data-infobox-main="1"]').first();
+
+        if ($mainImg.length && targetSrc) {
+            $mainImg.attr('src', targetSrc);
+        }
+    });
+
+    
     
     // ========================================
     // HELPER: NOTIFICATIONS
@@ -177,6 +200,24 @@ $(document).ready(function() {
         }, 3000);
     }
 
+        // ========================================
+    // PRZEŁĄCZANIE IKON PO ZMIANIE MOTYWU
+    // ========================================
+    function reloadThemeIcons(theme) {
+        $.getJSON('/api/theme_icons.php', { theme: theme })
+            .done(function (icons) {
+                $('.lore-icon').each(function () {
+                    const $img = $(this);
+                    const key = $img.data('category'); // np. "postacie"
+                    if (icons[key]) {
+                        $img.attr('src', icons[key]);
+                    }
+                });
+            })
+            .fail(function () {
+                console.error('Nie udało się pobrać ikon dla motywu', theme);
+            });
+    }
 
 
 });

@@ -18,6 +18,7 @@ html[data-theme="ru"] {
     /* Akcenty – ciemniejsze czerwienie, bez „neonów” */
     --accent-main: #dc2626;       /* ciemniejszy czerwony */
     --accent-main-soft: #b91c1c;
+    --accent-hover: #ff7369;
     --accent-strong: #7f1d1d;
     --accent-secondary: #f97373;  /* tylko do podkreśleń, nie jako tło */
     --header-bg: #dc262680;

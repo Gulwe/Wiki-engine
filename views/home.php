@@ -1,15 +1,27 @@
 <?php
 // views/home.php - TYLKO TREŚĆ
 
-// Pobierz zewnętrzne linki
 require_once __DIR__ . '/../models/ExternalLink.php';
 $linkModel = new ExternalLink();
 $externalLinks = $linkModel->getRecent(3);
 
-// Pobierz ostatnio edytowane strony
 require_once __DIR__ . '/../models/Page.php';
 $pageModel = new Page();
-$recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
+$recentlyEdited = $pageModel->getRecentlyUpdated(5);
+
+// motyw / ikony frakcji
+require_once __DIR__ . '/../core/BackgroundHelper.php';
+$theme = BackgroundHelper::getCurrentTheme();
+
+$iconBazy        = BackgroundHelper::getNationIconForTheme($theme, 'bazy');
+$iconProfesje    = BackgroundHelper::getNationIconForTheme($theme, 'profesje');
+$iconFabryka     = BackgroundHelper::getNationIconForTheme($theme, 'fabryka');
+$iconBudynki     = BackgroundHelper::getNationIconForTheme($theme, 'budynki');
+$iconPostacie    = BackgroundHelper::getNationIconForTheme($theme, 'postacie');
+$iconTechnologie = BackgroundHelper::getNationIconForTheme($theme, 'technologie');
+$iconMody        = BackgroundHelper::getNationIconForTheme($theme, 'modyfikacje');
+$iconAutorzy     = BackgroundHelper::getNationIconForTheme($theme, 'autorzy');
+$iconDead     = BackgroundHelper::getNationIconForTheme($theme, 'dead');
 ?>
 
 <!-- GLOBALNE TŁO -->
@@ -39,81 +51,114 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
         <a href="/categories" class="btn-outline">
             <span>📂 Przeglądaj kategorie</span>
         </a>
-                <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
-        <a href="/syntax-help" class="btn-outline">📘 Pomoc składni</a>
-            <?php endif; ?>
+        <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
+            <a href="/syntax-help" class="btn-outline">📘 Pomoc składni</a>
+        <?php endif; ?>
     </div>
+
     <!-- SEKCJA KAMPANII I LORE -->
-<div class="home-categories">
-    <!-- Kampanie -->
-    <div class="category-section">
-        <h3 class="category-title">Kampanie</h3>
-        <div class="category-grid">
-            <a href="/page/kampania-amerykanska" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/am.png" alt="Amerykanie">
-                </div>
-                <div class="category-name">Kampania Amerykańska</div>
-            </a>
-            <a href="/page/kampania-rosyjska" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/ru.png" alt="Rosjanie">
-                </div>
-                <div class="category-name">Kampania Rosyjska</div>
-            </a>
-            <a href="/page/kampania-ares" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/Ares.png" alt="Ares">
-                </div>
-                <div class="category-name">Kampania Ares</div>
-            </a>
+    <div class="home-categories">
+        <!-- Kampanie -->
+        <div class="category-section">
+            <h3 class="category-title">Kampanie</h3>
+            <div class="category-grid">
+                <a href="/page/kampania-amerykanska" class="category-card">
+                    <div class="category-icon">
+                        <img src="/uploads/icons/am.png" alt="Amerykanie">
+                    </div>
+                    <div class="category-name">Kampania Amerykańska</div>
+                </a>
+                <a href="/page/kampania-rosyjska" class="category-card">
+                    <div class="category-icon">
+                        <img src="/uploads/icons/ru.png" alt="Rosjanie">
+                    </div>
+                    <div class="category-name">Kampania Rosyjska</div>
+                </a>
+                <a href="/page/kampania-ares" class="category-card">
+                    <div class="category-icon">
+                        <img src="/uploads/icons/zsi.png" alt="ZSI">
+                    </div>
+                    <div class="category-name">Kampania Arabska</div>
+                </a>
+                <a href="/page/kampania-ares" class="category-card">
+                    <div class="category-icon">
+                        <img src="/uploads/icons/Ares.png" alt="Ares">
+                    </div>
+                    <div class="category-name">Kampania Ares</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Lore i opisy -->
+        <div class="category-section">
+            <h3 class="category-title">Lore i opisy</h3>
+            <div class="category-grid">
+                <a href="/page/bazy" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconBazy, ENT_QUOTES) ?>" alt="Bazy"
+                             class="lore-icon" data-category="bazy">
+                    </div>
+                    <div class="category-name">Bazy</div>
+                </a>
+                <a href="/page/profesje" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconProfesje, ENT_QUOTES) ?>" alt="Profesje"
+                             class="lore-icon" data-category="profesje">
+                    </div>
+                    <div class="category-name">Profesje</div>
+                </a>
+                <a href="/page/fabryka" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconFabryka, ENT_QUOTES) ?>" alt="Fabryka"
+                             class="lore-icon" data-category="fabryka">
+                    </div>
+                    <div class="category-name">Fabryka</div>
+                </a>
+                <a href="/page/budynki" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconBudynki, ENT_QUOTES) ?>" alt="Budynki"
+                             class="lore-icon" data-category="budynki">
+                    </div>
+                    <div class="category-name">Budynki</div>
+                </a>
+                <a href="/page/postacie" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconPostacie, ENT_QUOTES) ?>" alt="Postacie"
+                             class="lore-icon" data-category="postacie">
+                    </div>
+                    <div class="category-name">Postacie</div>
+                </a>
+                <a href="/page/technologie" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconTechnologie, ENT_QUOTES) ?>" alt="Technologie"
+                             class="lore-icon" data-category="technologie">
+                    </div>
+                    <div class="category-name">Technologie</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Modyfikacje -->
+        <div class="category-section">
+            <h3 class="category-title">Modyfikacje</h3>
+            <div class="category-grid">
+                <a href="/page/modyfikacje" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconMody, ENT_QUOTES) ?>" alt="Mody"
+                             class="lore-icon" data-category="modyfikacje">
+                    </div>
+                    <div class="category-name">Mody</div>
+                </a>
+                <a href="/page/autorzy" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconAutorzy, ENT_QUOTES) ?>" alt="Autorzy"
+                             class="lore-icon" data-category="autorzy">
+                    </div>
+                    <div class="category-name">Autorzy</div>
+                </a>
+            </div>
         </div>
     </div>
-
-    <!-- Lore i opisy -->
-    <div class="category-section">
-        <h3 class="category-title">Lore i opisy</h3>
-        <div class="category-grid">
-            <a href="/page/bazy" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/bazy.png" alt="Bazy">
-                </div>
-                <div class="category-name">Bazy</div>
-            </a>
-            <a href="/page/profesje" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/profesje.png" alt="Profesje">
-                </div>
-                <div class="category-name">Profesje</div>
-            </a>
-            <a href="/page/fabryka" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/fabryka.png" alt="Fabryka">
-                </div>
-                <div class="category-name">Fabryka</div>
-            </a>
-            <a href="/page/budynki" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/budynki.png" alt="Budynki">
-                </div>
-                <div class="category-name">Budynki</div>
-            </a>
-            <a href="/page/postacie" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/postacie.png" alt="Postacie">
-                </div>
-                <div class="category-name">Postacie</div>
-            </a>
-            <a href="/page/technologie" class="category-card">
-                <div class="category-icon">
-                    <img src="/uploads/icons/technologie.png" alt="Technologie">
-                </div>
-                <div class="category-name">Technologie</div>
-            </a>
-        </div>
-    </div>
-</div>
-
 </div>
 
 <!-- TRZY KOLUMNY -->
@@ -202,8 +247,6 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
                            target="_blank" 
                            rel="noopener noreferrer"
                            class="external-link-card">
-                            
-                            <!-- Miniatura -->
                             <div class="external-link-thumb">
                                 <?php if (!empty($link['thumbnail'])): ?>
                                     <img src="<?= htmlspecialchars($link['thumbnail']) ?>" 
@@ -214,8 +257,6 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            
-                            <!-- Treść -->
                             <div class="external-link-body">
                                 <div class="external-link-title">
                                     <?= htmlspecialchars($link['title']) ?>
@@ -233,8 +274,6 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            
-                            <!-- Strzałka "otwórz" -->
                             <div class="external-link-arrow">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
@@ -249,7 +288,6 @@ $recentlyEdited = $pageModel->getRecentlyUpdated(5); // 5 ostatnio edytowanych
                 </p>
             <?php endif; ?>
 
-            <!-- Discord widget -->
             <div class="discord-widget">
                 <iframe
                     src="https://discord.com/widget?id=1120738124276977745&theme=dark"

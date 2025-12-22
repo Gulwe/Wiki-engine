@@ -67,6 +67,58 @@ class BackgroundHelper
         return '/backgrounds/' . $folder . '/' . $randomImage;
     }
 
+
+    /**
+     * Pobierz losową ikonę frakcji na podstawie ID motywu/nacji
+     * (am, ru, zsi, default itd.)
+     *
+     * Struktura katalogów:
+     * public/icons/id_nacja/{id}/plik.png
+     */
+public static function getNationIconForTheme(string $themeName, string $iconName): string
+{
+    $themeToNation = [
+        'default' => 'default',
+        'am'      => 'am',
+        'ru'      => 'ru',
+        'zsi'     => 'zsi',
+    ];
+
+    $nationId = $themeToNation[$themeName] ?? 'default';
+
+    // baza: /public/uploads/icons/id_nacja/{nacja}/
+    $baseDir = __DIR__ . '/../public/uploads/icons/' . $nationId . '/';
+    $baseUrl = '/uploads/icons/' . $nationId . '/';
+
+    // obsługujemy kilka rozszerzeń
+    $possibleExt = ['png', 'webp', 'jpg', 'jpeg', 'gif'];
+
+    foreach ($possibleExt as $ext) {
+        $path = $baseDir . $iconName . '.' . $ext;
+        if (is_file($path)) {
+            return $baseUrl . $iconName . '.' . $ext;
+        }
+    }
+
+    // fallback: default theme
+    if ($nationId !== 'default') {
+        $baseDir = __DIR__ . '/../public/uploads/icons/default/';
+        $baseUrl = '/uploads/icons/default/';
+
+        foreach ($possibleExt as $ext) {
+            $path = $baseDir . $iconName . '.' . $ext;
+            if (is_file($path)) {
+                return $baseUrl . $iconName . '.' . $ext;
+            }
+        }
+    }
+
+    error_log("BackgroundHelper: Icon {$iconName} not found for theme {$themeName}");
+    return '';
+}
+
+
+
     /**
      * Pobierz aktualny motyw użytkownika
      */
@@ -110,6 +162,7 @@ class BackgroundHelper
         $currentTheme = self::getCurrentTheme();
         error_log("BackgroundHelper: Getting background for current theme: " . $currentTheme);
         return self::getThemeBackground($currentTheme);
+        reloadThemeIcons(theme);
     }
 
     /**

@@ -679,11 +679,169 @@ $content = preg_replace_callback(
     $content
 );
 
+// INFOBOX BAZY
+$content = preg_replace_callback(
+    '/\{\{baza\s*(.*?)\}\}/si',
+    function ($m) {
+        $raw    = trim($m[1]);
+        $params = $this->parseTemplateParams($raw);
+        return $this->renderInfoboxBaza($params);
+    },
+    $content
+);
+
+
+// KARTA MODA
+$content = preg_replace_callback(
+    '/\{\{mod\s*(.*?)\}\}/si',
+    function ($m) {
+        $raw    = trim($m[1]);
+        $params = $this->parseTemplateParams($raw);
+        return $this->renderModCard($params);
+    },
+    $content
+);
+
 
 
 
     return $content;
 }
+
+private function renderInfoboxBaza(array $params): string
+{
+    $nazwa      = htmlspecialchars($params['nazwa']   ?? 'Nieznana baza');
+    $obrazek    = trim($params['obrazek'] ?? '');
+    $typ        = htmlspecialchars($params['typ']     ?? '');
+    $dataRaw    = trim($params['data']    ?? '');
+    $nacjaPath  = trim($params['nacja']   ?? ''); // pełna ścieżka /uploads/XYZ.png
+    $dowodcaRaw = trim($params['dowodca'] ?? '');
+
+    $html = '<div class="infobox infobox-baza">';
+
+    // nagłówek
+    $html .= '<div class="infobox-header">' . $nazwa . '</div>';
+
+    // obrazek bazy
+    if ($obrazek !== '') {
+        $src = htmlspecialchars($obrazek, ENT_QUOTES);
+        $html .= '<div class="infobox-image">'
+               . '<img src="' . $src . '" alt="' . $nazwa . '">'
+               . '</div>';
+    }
+
+    $html .= '<div class="infobox-section">';
+
+    // Nacja – obrazek ze ścieżki
+    if ($nacjaPath !== '') {
+        $src = htmlspecialchars($nacjaPath, ENT_QUOTES);
+        $html .= '<div class="infobox-row infobox-row-nacja">'
+               .  '<span class="infobox-label">Nacja:</span> '
+               .  '<span class="infobox-value infobox-value-nacja">'
+               .    '<img src="' . $src . '" alt="Nacja" class="infobox-icon">'
+               .  '</span>'
+               . '</div>';
+    }
+
+    // Dowódca – linki wiki
+    if ($dowodcaRaw !== '') {
+        $html .= '<div class="infobox-row">'
+               .  '<span class="infobox-label">Dowódca:</span> '
+               .  '<span class="infobox-value">'
+               .     $this->parseInline($dowodcaRaw)
+               .  '</span>'
+               . '</div>';
+    }
+
+    // Typ
+    if ($typ !== '') {
+        $html .= '<div class="infobox-row">'
+               .  '<span class="infobox-label">Typ:</span> '
+               .  '<span class="infobox-value">' . $typ . '</span>'
+               . '</div>';
+    }
+
+    // Data
+    if ($dataRaw !== '') {
+        $html .= '<div class="infobox-row">'
+               .  '<span class="infobox-label">Data założenia:</span> '
+               .  '<span class="infobox-value">' . htmlspecialchars($dataRaw) . '</span>'
+               . '</div>';
+    }
+
+    $html .= '</div>'; // section
+    $html .= '</div>'; // infobox
+
+    return $html;
+}
+
+
+
+
+
+
+
+private function renderModCard(array $params): string
+{
+    $name  = trim($params['name'] ?? '');
+    $link  = trim($params['link'] ?? '');
+    $img   = trim($params['img']  ?? '');
+    $desc  = trim($params['desc'] ?? '');
+    $author      = trim($params['author'] ?? '');
+    $author_link = trim($params['author_link'] ?? '');
+
+    if ($name === '') {
+        return '';
+    }
+
+    // Escaping
+    $nameEsc   = htmlspecialchars($name, ENT_QUOTES);
+    $descEsc   = htmlspecialchars($desc, ENT_QUOTES);
+    $linkEsc   = $link !== '' ? htmlspecialchars($link, ENT_QUOTES) : '';
+    $imgEsc    = $img  !== '' ? htmlspecialchars($img, ENT_QUOTES)  : '';
+    $authorEsc = htmlspecialchars($author, ENT_QUOTES);
+    $authorLinkEsc = $author_link !== '' ? htmlspecialchars($author_link, ENT_QUOTES) : '';
+
+    // Tytuł jako link do strony moda
+    $titleHtml = $linkEsc !== ''
+        ? '<a class="mod-card-title-link" href="' . $linkEsc . '">' . $nameEsc . '</a>'
+        : $nameEsc;
+
+    // Autor jako link (jeśli podany)
+    $authorHtml = '';
+    if ($authorEsc !== '') {
+        $authorLabel = $authorEsc;
+        if ($authorLinkEsc !== '') {
+            $authorLabel = '<a href="' . $authorLinkEsc . '">' . $authorLabel . '</a>';
+        }
+        $authorHtml = '<div class="mod-card-author">Autor: ' . $authorLabel . '</div>';
+    }
+
+    // Obrazek miniaturka (opcjonalny)
+    $thumbHtml = '';
+    if ($imgEsc !== '') {
+        $thumbHtml =
+            '<div class="mod-card-thumb">' .
+                '<img src="' . $imgEsc . '" alt="' . $nameEsc . '">' .
+            '</div>';
+    }
+
+    // Opis
+    $descHtml = $descEsc !== ''
+        ? '<div class="mod-card-desc">' . $descEsc . '</div>'
+        : '';
+
+    return
+        '<article class="mod-card">' .
+            $thumbHtml .
+            '<div class="mod-card-body">' .
+                '<h3 class="mod-card-title">' . $titleHtml . '</h3>' .
+                $descHtml .
+                $authorHtml .
+            '</div>' .
+        '</article>';
+}
+
 
 private function renderBackButton(array $params): string
 {
@@ -1082,37 +1240,43 @@ private function parseInline(string $content): string {
         return $text;
     }
     
-        // === INFOBOX / SZABLONY ===
 private function parseInfobox(string $content): string
 {
-    // Regex dla infobox (lazy matching + multiline)
-    $pattern = '/\{\{infobox-postac\s*(.*?)\}\}/is';
+    // 1) infobox postaci
+    $patternPostac = '/\{\{infobox-postac\s*(.*?)\}\}/is';
 
-    return preg_replace_callback($pattern, function ($matches) {
+    $content = preg_replace_callback($patternPostac, function ($matches) {
+        $paramsRaw = trim($matches[1]);
+        $params    = $this->parseTemplateParams($paramsRaw);
+        return $this->renderInfoboxPostac($params);
+    }, $content);
+
+    // 2) infobox bazy
+    $patternBaza = '/\{\{baza\s*(.*?)\}\}/is';
+    $content = preg_replace_callback($patternBaza, function ($matches) {
         $paramsRaw = $matches[1];
 
-        // Parsuj parametry - POPRAWIONE dla wielolinijkowych wartości
         $params = [];
-        
-        // Regex który łapie parametr | key = value (może być w wielu liniach)
-        // Używamy pozytywnego lookahead aby zatrzymać się przed następnym |
-        preg_match_all('/\|\s*([a-z_]+)\s*=\s*((?:(?!\|\s*[a-z_]+\s*=).)*)/is', $paramsRaw, $paramMatches, PREG_SET_ORDER);
-        
-        foreach ($paramMatches as $match) {
-            $key = trim($match[1]);
-            $value = trim($match[2]);
-            
-            // Usuń zbędne białe znaki ale zachowaj nowe linie
-            // $value = preg_replace('/\s+/u', ' ', $value);
-            $value = preg_replace('/[ \t]+/', ' ', $value);
+        preg_match_all(
+            '/\|\s*([a-z_]+)\s*=\s*((?:(?!\|\s*[a-z_]+\s*=).)*)/is',
+            $paramsRaw,
+            $paramMatches,
+            PREG_SET_ORDER
+        );
 
-            
+        foreach ($paramMatches as $match) {
+            $key   = trim($match[1]);
+            $value = trim($match[2]);
+            $value = preg_replace('/[ \t]+/', ' ', $value);
             $params[$key] = $value;
         }
 
-        return $this->renderInfoboxPostac($params);
+        return $this->renderInfoboxBaza($params);
     }, $content);
+
+    return $content;
 }
+
 
 
     // === PARSUJ PARAMETRY SZABLONU ===
@@ -1181,10 +1345,21 @@ private function parseRightImage(string $content): string
 }
 
 
-private function renderInfoboxPostac(array $params): string {
+private function renderInfoboxPostac(array $params): string
+{
     $imie        = htmlspecialchars($params['imie'] ?? 'Nieznana postać');
-    $zdjecie     = htmlspecialchars($params['zdjecie'] ?? '');
-    $wiekRaw     = trim($params['wiek'] ?? '');            // ← bez '-'
+    $zdjecie     = trim($params['zdjecie'] ?? 'NA.png');
+
+    // dodatkowe zdjęcia
+    $zdjecie2       = trim($params['zdjecie2'] ?? '');
+    $zdjecie3       = trim($params['zdjecie3'] ?? '');
+    $zdjecie4       = trim($params['zdjecie4'] ?? '');
+    $zdjecie1Label  = htmlspecialchars($params['zdjecie1_label'] ?? '2');
+    $zdjecie2Label  = htmlspecialchars($params['zdjecie2_label'] ?? '2');
+    $zdjecie3Label  = htmlspecialchars($params['zdjecie3_label'] ?? '3');
+    $zdjecie4Label  = htmlspecialchars($params['zdjecie4_label'] ?? '4');
+
+    $wiekRaw     = trim($params['wiek'] ?? '');
     $pochodzenie = trim($params['pochodzenie'] ?? '');
     $pochodzenieFlag = $params['pochodzenie_flaga'] ?? '';
     $dubbingRaw  = trim($params['dubbing'] ?? '');
@@ -1214,11 +1389,52 @@ private function renderInfoboxPostac(array $params): string {
     // Nagłówek
     $html .= '<div class="infobox-header">' . $imie . '</div>';
 
-    // Zdjęcie
+    // ==== ZDJĘCIA (główne + przełączane) ====
+    $images = [];
+
     if ($zdjecie !== '') {
-        $html .= '<div class="infobox-image">';
-        $html .= '<img src="' . $zdjecie . '" alt="' . $imie . '">';
+        $images[] = [
+            'src'   => htmlspecialchars($zdjecie, ENT_QUOTES),
+            'label' => $zdjecie1Label,
+        ];
+    }
+    if ($zdjecie2 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($zdjecie2, ENT_QUOTES),
+            'label' => $zdjecie2Label,
+        ];
+    }
+    if ($zdjecie3 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($zdjecie3, ENT_QUOTES),
+            'label' => $zdjecie3Label,
+        ];
+    }
+    if ($zdjecie4 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($zdjecie4, ENT_QUOTES),
+            'label' => $zdjecie4Label,
+        ];
+    }
+
+    if (!empty($images)) {
+        $first = $images[0];
+
+        $html .= '<div class="infobox-image infobox-image-multi">';
+        $html .= '<img data-infobox-main="1" src="' . $first['src'] . '" alt="' . $imie . '">';
         $html .= '</div>';
+
+        if (count($images) > 1) {
+            $html .= '<div class="infobox-image-tabs">';
+            foreach ($images as $idx => $img) {
+                $active = $idx === 0 ? ' active' : '';
+                $html .= '<button type="button" class="infobox-image-tab' . $active . '"'
+                       . ' data-target-src="' . $img['src'] . '">'
+                       . $img['label']
+                       . '</button>';
+            }
+            $html .= '</div>';
+        }
     }
 
     // Podstawowe informacje
@@ -1352,8 +1568,8 @@ private function renderInfoboxPostac(array $params): string {
     $html .= '</div>'; // /infobox
 
     return $html;
-
 }
+
 
 
 
