@@ -17,6 +17,8 @@ $icons = [
     'modyfikacje' => BackgroundHelper::getNationIconForTheme($theme, 'modyfikacje'),
     'autorzy'     => BackgroundHelper::getNationIconForTheme($theme, 'autorzy'),
     'dead'     => BackgroundHelper::getNationIconForTheme($theme, 'dead'),
+    'potyczki'     => BackgroundHelper::getNationIconForTheme($theme, 'potyczki'),
+    'multiplayer'     => BackgroundHelper::getNationIconForTheme($theme, 'multiplayer'),
 ];
 
 echo json_encode($icons);

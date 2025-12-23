@@ -530,6 +530,103 @@ if ($uri === '/pages') {
     exit;
 }
 
+// Routing dla narzędzi admin
+if ($uri === '/admin/wanted_pages' || $uri === '/tools/wanted-pages') {
+    // sprawdź, czy user jest adminem
+    if (empty($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+        http_response_code(403);
+        die('Dostęp tylko dla administratora.');
+    }
+
+    // Logika wanted pages
+    $db = Database::getInstance()->getConnection();
+
+    // 1. Pobierz wszystkie slugi istniejących stron
+    $pagesStmt = $db->query("SELECT slug FROM pages");
+    $existing = [];
+    while ($row = $pagesStmt->fetch(PDO::FETCH_ASSOC)) {
+        $existing[$row['slug']] = true;
+    }
+
+    // 2. Pobierz wszystkie treści (aktualne rewizje)
+    $stmt = $db->query("
+        SELECT p.slug AS page_slug, r.content
+        FROM pages p
+        JOIN revisions r ON p.current_revision_id = r.revision_id
+    ");
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 3. Zbierz wszystkie linki [[...]] i policz, do których NIE ma strony
+    $wanted = [];   // [target_slug => count]
+    $examples = []; // przykładowa strona źródłowa
+
+    foreach ($rows as $row) {
+        $content   = $row['content'];
+        $from_slug = $row['page_slug'];
+
+        // znajdź wszystkie [[Page]] i [[Page|Label]]
+        if (preg_match_all('/\[\[([^|\]]+)(?:\|[^\]]*)?\]\]/u', $content, $matches)) {
+            foreach ($matches[1] as $targetTitle) {
+                $targetTitle = trim($targetTitle);
+                if ($targetTitle === '') continue;
+
+                // slugify (taka sama logika jak w parseLinks)
+                $map = ['ą'=>'a','ć'=>'c','ę'=>'e','ł'=>'l','ń'=>'n','ó'=>'o','ś'=>'s','ż'=>'z','ź'=>'z',
+                        'Ą'=>'A','Ć'=>'C','Ę'=>'E','Ł'=>'L','Ń'=>'N','Ó'=>'O','Ś'=>'S','Ż'=>'Z','Ź'=>'Z'];
+                $pageForSlug = strtr($targetTitle, $map);
+                $slug = preg_replace('/[^a-z0-9\-]+/u', '-', mb_strtolower($pageForSlug, 'UTF-8'));
+                $slug = trim($slug, '-');
+
+                // pomijamy istniejące strony
+                if (isset($existing[$slug])) {
+                    continue;
+                }
+
+                // zlicz
+                if (!isset($wanted[$slug])) {
+                    $wanted[$slug] = 0;
+                    $examples[$slug] = $from_slug;
+                }
+                $wanted[$slug]++;
+            }
+        }
+    }
+
+    // 4. Posortuj malejąco
+    arsort($wanted);
+
+    // 5. Renderuj widok
+    View::render('admin/wanted_pages', [
+        'wanted' => $wanted,
+        'examples' => $examples,
+        'pageTitle' => 'Brakujące strony (Wanted pages)'
+    ]);
+    exit;
+}
+
+
+// ========================================
+// === ROUTING - KATEGORIE ===
+// ========================================
+
+// Lista wszystkich kategorii
+if ($uri === '/categories') {
+    $db = Database::getInstance()->getConnection();
+
+    $categories = $db->query("
+        SELECT c.*, COUNT(pc.page_id) as pages_count
+        FROM categories c
+        LEFT JOIN page_categories pc ON c.category_id = pc.category_id
+        GROUP BY c.category_id
+        ORDER BY c.name ASC
+    ")->fetchAll();
+
+    View::render('categories', [
+        'categories' => $categories,
+        'pageTitle' => 'Kategorie'
+    ]);
+    exit;
+}
 
 // ========================================
 // === ROUTING - KATEGORIE ===

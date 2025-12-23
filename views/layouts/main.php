@@ -3,6 +3,9 @@
 require_once __DIR__ . '/../../core/ThemeLoader.php';
 
 $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
+
+// Wykryj aktualną stronę po URL lub przekazanej zmiennej
+$currentPage = $currentPage ?? basename($_SERVER['REQUEST_URI'], '.php');
 ?>
 <!DOCTYPE html>
 <html lang="pl">
@@ -12,7 +15,7 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
     <title><?= $pageTitle ?? htmlspecialchars($siteName) ?></title>
     <link rel="icon" type="image/x-icon" href="/css/favicon.ico"> 
 
-    <!-- CSS -->
+    <!-- CSS bazowe -->
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/components.css"> 
     <link rel="stylesheet" href="/css/layout.css">
@@ -33,7 +36,7 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
         <style><?= $customCSS ?></style>
     <?php endif; ?>
 </head>
-<body>
+<body class="<?= htmlspecialchars($currentPage ?? 'page-default') ?>">
     <!-- GLOBALNE TŁO -->
     <?php include __DIR__ . '/../partials/background.php'; ?>
 
@@ -54,8 +57,6 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
     
     <?php include __DIR__ . '/../partials/footer.php'; ?>
 
-
-
     <!-- Default JS -->
     <script src="/js/search.js"></script>
     <script src="/js/wiki.js"></script>
@@ -70,7 +71,6 @@ $siteName = ThemeLoader::get('site_name', 'Wiki Engine');
         <script><?= $inlineJS ?></script>
     <?php endif; ?>
 
-
 <script>
 // Ignoruj błędy rozszerzeń Chrome
 window.addEventListener('unhandledrejection', function(event) {
@@ -81,7 +81,6 @@ window.addEventListener('unhandledrejection', function(event) {
     }
 });
 </script>
-
 
 </body>
 </html>

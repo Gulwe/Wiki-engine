@@ -22,6 +22,8 @@ $iconTechnologie = BackgroundHelper::getNationIconForTheme($theme, 'technologie'
 $iconMody        = BackgroundHelper::getNationIconForTheme($theme, 'modyfikacje');
 $iconAutorzy     = BackgroundHelper::getNationIconForTheme($theme, 'autorzy');
 $iconDead     = BackgroundHelper::getNationIconForTheme($theme, 'dead');
+$iconPotyczki     = BackgroundHelper::getNationIconForTheme($theme, 'potyczki');
+$iconMultiplayer     = BackgroundHelper::getNationIconForTheme($theme, 'multiplayer');
 ?>
 
 <!-- GLOBALNE TŁO -->
@@ -88,6 +90,26 @@ $iconDead     = BackgroundHelper::getNationIconForTheme($theme, 'dead');
                 </a>
             </div>
         </div>
+        <!-- Gameplay -->
+                <div class="category-section">
+            <h3 class="category-title">Gameplay</h3>
+            <div class="category-grid">
+                <a href="/page/potyczki" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconPotyczki, ENT_QUOTES) ?>" alt="Potyczki"
+                             class="lore-icon icon-main" data-category="potyczki">
+                    </div>
+                    <div class="category-name">Potyczki</div>
+                </a>
+                                <a href="/page/multiplayer" class="category-card">
+                    <div class="category-icon">
+                        <img src="<?= htmlspecialchars($iconMultiplayer, ENT_QUOTES) ?>" alt="Multiplayer"
+                             class="lore-icon icon-main" data-category="multiplayer">
+                    </div>
+                    <div class="category-name">Multiplayer</div>
+                </a>
+                            </div>
+        </div>
 
         <!-- Lore i opisy -->
         <div class="category-section">
@@ -96,42 +118,42 @@ $iconDead     = BackgroundHelper::getNationIconForTheme($theme, 'dead');
                 <a href="/page/bazy" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconBazy, ENT_QUOTES) ?>" alt="Bazy"
-                             class="lore-icon" data-category="bazy">
+                             class="lore-icon icon-main" data-category="bazy">
                     </div>
                     <div class="category-name">Bazy</div>
                 </a>
                 <a href="/page/profesje" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconProfesje, ENT_QUOTES) ?>" alt="Profesje"
-                             class="lore-icon" data-category="profesje">
+                             class="lore-icon icon-main" data-category="profesje">
                     </div>
                     <div class="category-name">Profesje</div>
                 </a>
                 <a href="/page/fabryka" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconFabryka, ENT_QUOTES) ?>" alt="Fabryka"
-                             class="lore-icon" data-category="fabryka">
+                             class="lore-icon icon-main" data-category="fabryka">
                     </div>
                     <div class="category-name">Fabryka</div>
                 </a>
                 <a href="/page/budynki" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconBudynki, ENT_QUOTES) ?>" alt="Budynki"
-                             class="lore-icon" data-category="budynki">
+                             class="lore-icon icon-main" data-category="budynki">
                     </div>
                     <div class="category-name">Budynki</div>
                 </a>
                 <a href="/page/postacie" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconPostacie, ENT_QUOTES) ?>" alt="Postacie"
-                             class="lore-icon" data-category="postacie">
+                             class="lore-icon icon-main" data-category="postacie">
                     </div>
                     <div class="category-name">Postacie</div>
                 </a>
                 <a href="/page/technologie" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconTechnologie, ENT_QUOTES) ?>" alt="Technologie"
-                             class="lore-icon" data-category="technologie">
+                             class="lore-icon icon-main" data-category="technologie">
                     </div>
                     <div class="category-name">Technologie</div>
                 </a>
@@ -145,14 +167,14 @@ $iconDead     = BackgroundHelper::getNationIconForTheme($theme, 'dead');
                 <a href="/page/modyfikacje" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconMody, ENT_QUOTES) ?>" alt="Mody"
-                             class="lore-icon" data-category="modyfikacje">
+                             class="lore-icon icon-main" data-category="modyfikacje">
                     </div>
                     <div class="category-name">Mody</div>
                 </a>
                 <a href="/page/autorzy" class="category-card">
                     <div class="category-icon">
                         <img src="<?= htmlspecialchars($iconAutorzy, ENT_QUOTES) ?>" alt="Autorzy"
-                             class="lore-icon" data-category="autorzy">
+                             class="lore-icon icon-main" data-category="autorzy">
                     </div>
                     <div class="category-name">Autorzy</div>
                 </a>

@@ -1,6 +1,8 @@
 <?php
 class WikiParser {
 
+
+
     // === ALERTY / POWIADOMIENIA ===
     private function parseAlerts(string $content): string {
         // {{alert|info|Tytuł|Treść}}
@@ -80,17 +82,10 @@ private function parseYouTube(string $content): string {
         $width   = isset($matches[2]) ? (int)$matches[2] : 560;
         $height  = isset($matches[3]) ? (int)$matches[3] : 315;
 
-        return '<div class="youtube-embed" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 25px 0;">
-                    <iframe 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 12px;"
-                        src="https://www.youtube.com/embed/' . htmlspecialchars($videoId) . '" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
-                </div>';
+        return '<div class="youtube-embed" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 25px 0;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 12px;" src="https://www.youtube.com/embed/' . htmlspecialchars($videoId) . '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
     }, $content);
 }
+
 
 
     // === BADGE / ETYKIETA ===
@@ -316,19 +311,21 @@ public function parse(string $content): string {
     $content = $this->parseSymbols($content);
     $content = $this->parseYouTube($content);
 
+
     // 3. Inline
     $content = $this->parseHeadings($content);
+    $content = $this->parseLists($content);
     $content = $this->parseFormatting($content);
     $content = $this->parseBadges($content);
     $content = $this->parseIcons($content);
     $content = $this->parseProgress($content);
-    $content = $this->parseLists($content);
+
     $content = $this->parseQuotes($content);
     $content = $this->parseLinks($content);
     $content = $this->parseTags($content);
 
     // 4. Paragrafy
-    $content = $this->parseParagraphs($content);
+    //$content = $this->parseParagraphs($content);
 
     return $content;
 }
@@ -480,7 +477,6 @@ private function parseQuote(string $content): string
 private function parseLineBreaks(string $content): string {
     return str_replace('[br]', '<br>', $content);
 }
-
 
 // === TABELE [table] ===
 private function parseTables(string $content): string {
@@ -743,15 +739,30 @@ private function renderInfoboxBaza(array $params): string
                . '</div>';
     }
 
-    // Dowódca – linki wiki
-    if ($dowodcaRaw !== '') {
+    // Dowódca – linki wiki (obsługa listy)
+if ($dowodcaRaw !== '') {
+    // Rozdziel po znaku nowej linii lub przecinku
+    $dowodcy = preg_split('/[\r\n]+/', $dowodcaRaw);
+    $dowodcy = array_filter(array_map('trim', $dowodcy));
+    
+    if (!empty($dowodcy)) {
+        $label = count($dowodcy) > 1 ? 'Dowódcy:' : 'Dowódca:';
+        
         $html .= '<div class="infobox-row">'
-               .  '<span class="infobox-label">Dowódca:</span> '
-               .  '<span class="infobox-value">'
-               .     $this->parseInline($dowodcaRaw)
-               .  '</span>'
-               . '</div>';
+               .  '<span class="infobox-label">' . $label . '</span> '
+               .  '<span class="infobox-value infobox-value-dowodcy">';
+        
+        $parsedDowodcy = [];
+        foreach ($dowodcy as $dowodca) {
+            $parsedDowodcy[] = $this->parseInline($dowodca);
+        }
+        
+        $html .= implode('', $parsedDowodcy);
+        
+        $html .= '</span></div>';
     }
+}
+
 
     // Typ
     if ($typ !== '') {
@@ -774,6 +785,7 @@ private function renderInfoboxBaza(array $params): string
 
     return $html;
 }
+
 
 
 
@@ -852,21 +864,55 @@ private function renderBackButton(array $params): string
 
     $label  = trim($params['label'] ?? 'Wróć');
     $symbol = trim($params['symbol'] ?? 'arrow-left');
-    // sanity check – tylko bezpieczne znaki w nazwie symbolu
     $symbol = preg_replace('/[^a-zA-Z0-9_-]/', '', $symbol);
 
-    $hrefEsc  = htmlspecialchars($href, ENT_QUOTES);
-    $labelEsc = htmlspecialchars($label, ENT_QUOTES);
+    $hrefEsc   = htmlspecialchars($href, ENT_QUOTES);
+    $labelHtml = htmlspecialchars($label, ENT_QUOTES);
 
-    $innerIcon = '{{symbol:' . $symbol . '|' . $labelEsc . '}}';
+    // 1. Obecny motyw – zależy skąd go bierzesz
+    $theme = $this->currentTheme ?? 'default';
+
+    // 2. Mapowanie nazw symboli na „kategorie” z BackgroundHelpera
+    $categoryMap = [
+        'bazy'        => 'bazy',
+        'profesje'    => 'profesje',
+        'fabryka'     => 'fabryka',
+        'budynki'     => 'budynki',
+        'postacie'    => 'postacie',
+        'technologie' => 'technologie',
+        'modyfikacje' => 'modyfikacje',
+        'autorzy'     => 'autorzy',
+        'dead'        => 'dead',
+        'potyczki'        => 'potyczki',
+        'multiplayer'        => 'multiplayer',
+    ];
+
+    $innerIcon = '';
+
+    if (isset($categoryMap[$symbol])) {
+        // 3. Pobranie ścieżki ikony dla danego symbolu z BackgroundHelpera
+        $iconPath = BackgroundHelper::getNationIconForTheme($theme, $categoryMap[$symbol]);
+        $iconEsc  = htmlspecialchars($iconPath, ENT_QUOTES);
+
+        $innerIcon =
+            '<img src="' . $iconEsc . '" alt="' . $labelHtml . '" ' .
+            'class="lore-icon icon-small lore-icon--back" data-category="' . $categoryMap[$symbol] . '">';
+
+    } else {
+        // fallback: stary symbol wiki
+        $innerIcon = '{{symbol:' . $symbol . '|' . $label . '}}';
+    }
 
     return '<div class="wiki-back-button">'
          .   '<a href="' . $hrefEsc . '">'
          .     $innerIcon
-         .     '<span class="wiki-back-label">' . $labelEsc . '</span>'
+         .     '<span class="wiki-back-label">' . $labelHtml . '</span>'
          .   '</a>'
          . '</div>';
 }
+
+
+
 
 
 // === RENDER: MAPA INTERAKTYWNA ===
@@ -1064,16 +1110,18 @@ private function parseImages(string $content): string {
         return $content;
     }
 
-    // === FORMATOWANIE ===
-    private function parseFormatting(string $content): string {
-        $content = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $content);
-        $content = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $content);
-        $content = preg_replace('/~~(.+?)~~/', '<del>$1</del>', $content);
-        $content = preg_replace('/__(.+?)__/', '<u>$1</u>', $content);
-        $content = preg_replace('/==(.+?)==/', '<mark>$1</mark>', $content);
+// === FORMATOWANIE ===
+private function parseFormatting(string $content): string {
+    $content = preg_replace('/\*\*\*(.+?)\*\*\*/s', '<strong><em>$1</em></strong>', $content);  // *** -> bold+italic
+    $content = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $content);  // ** -> bold
+    $content = preg_replace('/\*(.+?)\*/s', '<em>$1</em>', $content);              // * -> italic
+    $content = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $content);
+    $content = preg_replace('/__(.+?)__/s', '<u>$1</u>', $content);
+    $content = preg_replace('/==(.+?)==/s', '<mark>$1</mark>', $content);
 
-        return $content;
-    }
+    return $content;
+}
+
 
 // === LISTY ===
 private function parseLists(string $content): string {
@@ -1201,6 +1249,10 @@ private function parseLinks(string $content): string {
 
         return implode("\n", $result);
     }
+
+
+
+
 
     // === TAGI / HASHTAGI ===
     private function parseTags(string $content): string {

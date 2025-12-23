@@ -162,7 +162,6 @@ public static function getNationIconForTheme(string $themeName, string $iconName
         $currentTheme = self::getCurrentTheme();
         error_log("BackgroundHelper: Getting background for current theme: " . $currentTheme);
         return self::getThemeBackground($currentTheme);
-        reloadThemeIcons(theme);
     }
 
     /**

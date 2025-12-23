@@ -5,6 +5,7 @@
             <a href="/admin" class="btn active">📊 Dashboard</a>
             <a href="/admin/users" class="btn">👥 Użytkownicy</a>
             <a href="/admin/categories" class="btn">📁 Kategorie</a>
+            <a href="/admin/wanted_pages" class="btn">📁 Brakujące strony</a>
             <a href="/admin/customize" class="btn">🎨 Customizacja</a>
             <a href="/analytics" class="btn">📊 Statystyki</a>
             <a href="/admin/templates" class="btn">🧩 Szablony</a>

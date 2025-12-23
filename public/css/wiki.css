@@ -717,7 +717,7 @@ ol li::marker {
 .infobox-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;  /* zmienione z center */
     padding: 6px 0;
     font-size: 13px;
     line-height: 1.4;
@@ -728,6 +728,7 @@ ol li::marker {
     color: var(--text-secondary);
     flex: 0 0 auto;
     margin-right: 10px;
+    padding-top: 2px;  /* wyrównanie z pierwszą linią wartości */
 }
 
 .infobox-value {
@@ -735,10 +736,26 @@ ol li::marker {
     text-align: right;
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-end;  /* zmienione z center */
     justify-content: flex-end;
     gap: 6px;
+    flex-direction: row;  /* domyślnie poziomo */
 }
+
+/* Dowódcy w pionie z odstępami */
+.infobox-value-dowodcy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;  /* wyrównanie do prawej */
+    gap: 4px;
+}
+
+.infobox-value-dowodcy a {
+    line-height: 1.4;
+}
+
+
+
 
 .infobox-separator {
     background-color: var(--bg-surface-alt);
@@ -1173,10 +1190,16 @@ ol li::marker {
     border-radius: 10px;
     transition: all 0.3s ease;
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 10px;
     box-shadow: var(--shadow-sm);
+
+    /* najważniejsze dla rozciągania */
+    flex: 1 1 0;
+    width: 100%;
 }
+
 
 .nation-tab:hover {
     background: var(--btn-primary-bg);
@@ -1194,7 +1217,7 @@ ol li::marker {
 }
 
 .nation-tab img {
-    max-width: 32px;
+    max-width: 64px; --32
     height: auto;
     vertical-align: middle;
 }
@@ -1454,7 +1477,7 @@ ol li::marker {
     display: none;
     padding: 18px 20px;
     border-radius: 10px;
-    background: rgba(0, 0, 0, 0.55);
+    /*background: rgba(0, 0, 0, 0.55);*/
     border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
@@ -1532,17 +1555,23 @@ ol li::marker {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.15s ease, z-index 0s;
+    z-index: 1;
+}
+
+.wiki-map-point:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    z-index: 10;
 }
 
 .wiki-map-point .wiki-symbol {
     width: 24px;
     height: 24px;
     filter: drop-shadow(0 0 4px rgba(0,0,0,0.8));
-    transition: transform 0.15s ease, filter 0.15s ease;
+    transition: filter 0.15s ease;
 }
 
 .wiki-map-point:hover .wiki-symbol {
-    transform: scale(1.1);
     filter: drop-shadow(0 0 6px rgba(0,255,255,1));
 }
 
@@ -1562,9 +1591,6 @@ ol li::marker {
     pointer-events: none;
 }
 
-.wiki-map-point:hover .wiki-map-label {
-    opacity: 1;           /* brak animacji, zawsze widoczne */
-}
 
 .wiki-back-button {
     margin: 0 0 1rem;
@@ -1660,7 +1686,6 @@ ol li::marker {
 .infobox-baza .infobox-row-nacja .infobox-value-nacja {
     display: flex;
     align-items: center;
-    justify-content: center;
 }
 
 .infobox-baza .infobox-value-nacja .wiki-symbol {
@@ -1704,7 +1729,26 @@ ol li::marker {
     border-bottom: 2px solid var(--accent-main);
 }
 
+
+/* domyślne */
 .lore-icon {
+    max-width: 100%;
+    max-height: 100%;
+    height: auto;
     object-fit: scale-down !important;
-    max-height: 100px !important;
 }
+
+/* mniejsze ikony */
+.icon-small {
+    max-height: 60px !important;
+}
+
+/* większe ikony */
+.icon-large {
+    max-height: 120px !important;
+}
+
+.icon-main {
+    max-height: 50px !important;
+}
+
