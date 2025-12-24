@@ -49,6 +49,40 @@ $(document).ready(function() {
         });
     }
     
+(function() {
+    'use strict';
+    
+    const FALLBACK = '/uploads/NA.png';
+    
+    // Funkcja zamiany na fallback
+    function setFallback(img) {
+        if (!img.dataset.errorHandled) {
+            img.dataset.errorHandled = 'true';
+            const originalSrc = img.src;
+            img.src = FALLBACK;
+            console.warn('Fallback obrazka:', originalSrc);
+        }
+    }
+    
+    // Obsługa błędów w czasie rzeczywistym
+    document.addEventListener('error', function(event) {
+        if (event.target.tagName === 'IMG') {
+            setFallback(event.target);
+        }
+    }, true);
+    
+    // Sprawdź już załadowane obrazki (dla późno ładowanego JS)
+    window.addEventListener('load', function() {
+        document.querySelectorAll('img').forEach(function(img) {
+            if (!img.complete || img.naturalHeight === 0) {
+                setFallback(img);
+            }
+        });
+    });
+})();
+
+
+
     // ========================================
     // DRAG & DROP UPLOAD
     // ========================================

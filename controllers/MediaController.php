@@ -1,16 +1,50 @@
 <?php
 class MediaController {
-    private $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    private $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
     private $maxFileSize = 5242880; // 5MB
-    private $uploadDir;
-    
+    private $uploadBaseDir;
+    private $allowedFolders = ['bases', 'chars', 'vehicles', 'maps', 'misc', 'visuals']; // dozwolone podfoldery
+
     public function __construct() {
-        $this->uploadDir = __DIR__ . '/../public/uploads/';
+        $this->uploadBaseDir = __DIR__ . '/../public/uploads/';
         
-        if (!file_exists($this->uploadDir)) {
-            mkdir($this->uploadDir, 0755, true);
+        if (!file_exists($this->uploadBaseDir)) {
+            mkdir($this->uploadBaseDir, 0755, true);
+        }
+        
+        // Utwórz podfoldery jeśli nie istnieją
+        foreach ($this->allowedFolders as $folder) {
+            $folderPath = $this->uploadBaseDir . $folder . '/';
+            if (!file_exists($folderPath)) {
+                mkdir($folderPath, 0755, true);
+            }
         }
     }
+    
+    // ✅ Pobierz folder docelowy z POST lub użyj domyślnego
+private function getTargetFolder(): string {
+    $folder = $_POST['folder'] ?? '';
+    
+    // Pusty string = główny folder
+    if ($folder === '') {
+        return '';
+    }
+    
+    // Walidacja - tylko dozwolone foldery
+    if (!in_array($folder, $this->allowedFolders)) {
+        return '';
+    }
+    
+    return $folder;
+}
+
+private function getUploadDir(string $folder): string {
+    if ($folder === '') {
+        return $this->uploadBaseDir; // /uploads/
+    }
+    return $this->uploadBaseDir . $folder . '/'; // /uploads/bases/
+}
+
     
     // ✅ NOWA FUNKCJA: Slugify z polskimi znakami
     private function slugifyFilename(string $filename): string {
@@ -57,6 +91,9 @@ class MediaController {
         $errors = [];
         $uploadedFiles = [];
         
+        $folder = $this->getTargetFolder();
+        $uploadDir = $this->getUploadDir($folder);
+        
         $fileCount = count($_FILES['images']['name']);
         
         for ($i = 0; $i < $fileCount; $i++) {
@@ -98,11 +135,11 @@ class MediaController {
             $extension = pathinfo($safeFilename, PATHINFO_EXTENSION);
             $basename = pathinfo($safeFilename, PATHINFO_FILENAME);
             $counter = 1;
-            while (file_exists($this->uploadDir . $safeFilename)) {
+            while (file_exists($uploadDir . $safeFilename)) {
                 $safeFilename = $basename . '_' . $counter . '.' . $extension;
                 $counter++;
             }
-            $targetPath = $this->uploadDir . $safeFilename;
+            $targetPath = $uploadDir . $safeFilename;
             
             if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                 $errors[] = $file['name'] . ': Failed to save file';
@@ -112,11 +149,11 @@ class MediaController {
             chmod($targetPath, 0644);
             
             try {
-                $this->saveToDatabase($safeFilename, $file['name'], $mimeType, $file['size'], $_SESSION['user_id']);
+                $this->saveToDatabase($safeFilename, $file['name'], $mimeType, $file['size'], $_SESSION['user_id'], $folder);
                 $uploadedCount++;
                 $uploadedFiles[] = [
                     'filename' => $safeFilename,
-                    'url' => '/uploads/' . $safeFilename
+                    'url' => '/uploads/' . $folder . '/' . $safeFilename
                 ];
             } catch (Exception $e) {
                 $errors[] = $file['name'] . ': Database error';
@@ -161,6 +198,9 @@ class MediaController {
             return ['success' => false, 'error' => 'Invalid image'];
         }
         
+        $folder = $this->getTargetFolder();
+        $uploadDir = $this->getUploadDir($folder);
+        
         // ✅ Użyj slugify
         $safeFilename = $this->slugifyFilename($file['name']);
         
@@ -168,11 +208,11 @@ class MediaController {
         $extension = pathinfo($safeFilename, PATHINFO_EXTENSION);
         $basename = pathinfo($safeFilename, PATHINFO_FILENAME);
         $counter = 1;
-        while (file_exists($this->uploadDir . $safeFilename)) {
+        while (file_exists($uploadDir . $safeFilename)) {
             $safeFilename = $basename . '_' . $counter . '.' . $extension;
             $counter++;
         }
-        $targetPath = $this->uploadDir . $safeFilename;
+        $targetPath = $uploadDir . $safeFilename;
         
         if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
             return ['success' => false, 'error' => 'Failed to save file'];
@@ -180,30 +220,42 @@ class MediaController {
         
         chmod($targetPath, 0644);
         
-        $this->saveToDatabase($safeFilename, $file['name'], $mimeType, $file['size'], $_SESSION['user_id']);
+        $this->saveToDatabase($safeFilename, $file['name'], $mimeType, $file['size'], $_SESSION['user_id'], $folder);
         
         return [
             'success' => true,
             'filename' => $safeFilename,
-            'url' => '/uploads/' . $safeFilename
+            'url' => '/uploads/' . $folder . '/' . $safeFilename
         ];
     }
     
-    private function saveToDatabase(string $filename, string $originalName, string $mimeType, int $size, int $userId): void {
-        $db = Database::getInstance()->getConnection();
-        
-        $stmt = $db->prepare("
-            INSERT INTO media (filename, original_name, file_path, mime_type, file_size, uploaded_by)
-            VALUES (:filename, :original_name, :file_path, :mime_type, :file_size, :uploaded_by)
-        ");
-        
-        $stmt->execute([
-            'filename' => $filename,
-            'original_name' => $originalName,
-            'file_path' => '/uploads/' . $filename,
-            'mime_type' => $mimeType,
-            'file_size' => $size,
-            'uploaded_by' => $userId
-        ]);
+private function saveToDatabase(string $filename, string $originalName, string $mimeType, int $size, int $userId, string $folder): void {
+    $db = Database::getInstance()->getConnection();
+    
+    // Generuj ścieżkę z folderem lub bez
+    $filePath = $folder !== '' 
+        ? '/uploads/' . $folder . '/' . $filename 
+        : '/uploads/' . $filename;
+    
+    $stmt = $db->prepare("
+        INSERT INTO media (filename, original_name, file_path, mime_type, file_size, uploaded_by, folder)
+        VALUES (:filename, :original_name, :file_path, :mime_type, :file_size, :uploaded_by, :folder)
+    ");
+    
+    $stmt->execute([
+        'filename' => $filename,
+        'original_name' => $originalName,
+        'file_path' => $filePath,
+        'mime_type' => $mimeType,
+        'file_size' => $size,
+        'uploaded_by' => $userId,
+        'folder' => $folder !== '' ? $folder : null
+    ]);
+}
+
+    
+    // ✅ NOWA METODA: Zwróć listę dostępnych folderów
+    public function getFolders(): array {
+        return $this->allowedFolders;
     }
 }

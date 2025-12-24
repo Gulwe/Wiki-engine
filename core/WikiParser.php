@@ -704,10 +704,24 @@ $content = preg_replace_callback(
     return $content;
 }
 
+
+
 private function renderInfoboxBaza(array $params): string
 {
     $nazwa      = htmlspecialchars($params['nazwa']   ?? 'Nieznana baza');
-    $obrazek    = trim($params['obrazek'] ?? '');
+    $obrazek    = trim($params['obrazek'] ?? 'NA.png');
+    
+    // dodatkowe zdjęcia
+    $obrazek2       = trim($params['obrazek2'] ?? '');
+    $obrazek3       = trim($params['obrazek3'] ?? '');
+    $obrazek4       = trim($params['obrazek4'] ?? '');
+    $obrazek5       = trim($params['obrazek5'] ?? '');
+    $obrazek1Label  = htmlspecialchars($params['obrazek1_label'] ?? '1');
+    $obrazek2Label  = htmlspecialchars($params['obrazek2_label'] ?? '2');
+    $obrazek3Label  = htmlspecialchars($params['obrazek3_label'] ?? '3');
+    $obrazek4Label  = htmlspecialchars($params['obrazek4_label'] ?? '4');
+    $obrazek5Label  = htmlspecialchars($params['obrazek5_label'] ?? '5');
+    
     $typ        = htmlspecialchars($params['typ']     ?? '');
     $dataRaw    = trim($params['data']    ?? '');
     $nacjaPath  = trim($params['nacja']   ?? ''); // pełna ścieżka /uploads/XYZ.png
@@ -718,51 +732,96 @@ private function renderInfoboxBaza(array $params): string
     // nagłówek
     $html .= '<div class="infobox-header">' . $nazwa . '</div>';
 
-    // obrazek bazy
+    // ==== OBRAZKI (główny + przełączane) ====
+    $images = [];
+
     if ($obrazek !== '') {
-        $src = htmlspecialchars($obrazek, ENT_QUOTES);
-        $html .= '<div class="infobox-image">'
-               . '<img src="' . $src . '" alt="' . $nazwa . '">'
-               . '</div>';
+        $images[] = [
+            'src'   => htmlspecialchars($obrazek, ENT_QUOTES),
+            'label' => $obrazek1Label,
+        ];
+    }
+    if ($obrazek2 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($obrazek2, ENT_QUOTES),
+            'label' => $obrazek2Label,
+        ];
+    }
+    if ($obrazek3 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($obrazek3, ENT_QUOTES),
+            'label' => $obrazek3Label,
+        ];
+    }
+    if ($obrazek4 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($obrazek4, ENT_QUOTES),
+            'label' => $obrazek4Label,
+        ];
+    }
+        if ($obrazek5 !== '') {
+        $images[] = [
+            'src'   => htmlspecialchars($obrazek5, ENT_QUOTES),
+            'label' => $obrazek5Label,
+        ];
+    }
+
+    if (!empty($images)) {
+        $first = $images[0];
+
+        $html .= '<div class="infobox-image infobox-image-multi">';
+        $html .= '<img data-infobox-main="1" src="' . $first['src'] . '" alt="' . $nazwa . '">';
+        $html .= '</div>';
+
+        if (count($images) > 1) {
+            $html .= '<div class="infobox-image-tabs">';
+            foreach ($images as $idx => $img) {
+                $active = $idx === 0 ? ' active' : '';
+                $html .= '<button type="button" class="infobox-image-tab' . $active . '"'
+                       . ' data-target-src="' . $img['src'] . '">'
+                       . $img['label']
+                       . '</button>';
+            }
+            $html .= '</div>';
+        }
     }
 
     $html .= '<div class="infobox-section">';
 
     // Nacja – obrazek ze ścieżki
     if ($nacjaPath !== '') {
-        $src = htmlspecialchars($nacjaPath, ENT_QUOTES);
+        $srcNacja = htmlspecialchars($nacjaPath, ENT_QUOTES);
         $html .= '<div class="infobox-row infobox-row-nacja">'
                .  '<span class="infobox-label">Nacja:</span> '
                .  '<span class="infobox-value infobox-value-nacja">'
-               .    '<img src="' . $src . '" alt="Nacja" class="infobox-icon">'
+               .    '<img src="' . $srcNacja . '" alt="Nacja" class="infobox-icon">'
                .  '</span>'
                . '</div>';
     }
 
     // Dowódca – linki wiki (obsługa listy)
-if ($dowodcaRaw !== '') {
-    // Rozdziel po znaku nowej linii lub przecinku
-    $dowodcy = preg_split('/[\r\n]+/', $dowodcaRaw);
-    $dowodcy = array_filter(array_map('trim', $dowodcy));
-    
-    if (!empty($dowodcy)) {
-        $label = count($dowodcy) > 1 ? 'Dowódcy:' : 'Dowódca:';
+    if ($dowodcaRaw !== '') {
+        // Rozdziel po znaku nowej linii
+        $dowodcy = preg_split('/[\r\n]+/', $dowodcaRaw);
+        $dowodcy = array_filter(array_map('trim', $dowodcy));
         
-        $html .= '<div class="infobox-row">'
-               .  '<span class="infobox-label">' . $label . '</span> '
-               .  '<span class="infobox-value infobox-value-dowodcy">';
-        
-        $parsedDowodcy = [];
-        foreach ($dowodcy as $dowodca) {
-            $parsedDowodcy[] = $this->parseInline($dowodca);
+        if (!empty($dowodcy)) {
+            $label = count($dowodcy) > 1 ? 'Dowódcy:' : 'Dowódca:';
+            
+            $html .= '<div class="infobox-row">'
+                   .  '<span class="infobox-label">' . $label . '</span> '
+                   .  '<span class="infobox-value infobox-value-dowodcy">';
+            
+            $parsedDowodcy = [];
+            foreach ($dowodcy as $dowodca) {
+                $parsedDowodcy[] = $this->parseInline($dowodca);
+            }
+            
+            $html .= implode('', $parsedDowodcy);
+            
+            $html .= '</span></div>';
         }
-        
-        $html .= implode('', $parsedDowodcy);
-        
-        $html .= '</span></div>';
     }
-}
-
 
     // Typ
     if ($typ !== '') {
@@ -1304,7 +1363,7 @@ private function parseInfobox(string $content): string
     }, $content);
 
     // 2) infobox bazy
-    $patternBaza = '/\{\{baza\s*(.*?)\}\}/is';
+    $patternBaza = '/\{\{infobox-baza\s*(.*?)\}\}/is';
     $content = preg_replace_callback($patternBaza, function ($matches) {
         $paramsRaw = $matches[1];
 
@@ -1360,35 +1419,42 @@ private function parseInfobox(string $content): string
 
 private function parseRightImage(string $content): string
 {
-    $pattern = '/\{\{right-image\s*(.*?)\}\}/is';
+    $pattern = '/\{\{right-image(.*?)\}\}/s';
 
     return preg_replace_callback($pattern, function ($m) {
-        $paramsRaw = $m[1];
-        $params = [];
-
-        preg_match_all('/\|\s*([a-z_]+)\s*=\s*(.*?)(?=\n\|\s*[a-z_]+\s*=|\}\}|$)/is',
-            $paramsRaw, $matches, PREG_SET_ORDER);
-
-        foreach ($matches as $match) {
-            $key = trim($match[1]);
-            $value = trim($match[2]);
-            $params[$key] = $value;
-        }
-
-        $src     = $params['src']     ?? '';
-        $caption = $params['caption'] ?? '';
-        $alt     = $params['alt']     ?? $caption;
+        preg_match('/\|\s*src\s*=\s*([^\n|]+)/i', $m[1], $srcMatch);
+        preg_match('/\|\s*caption\s*=\s*([^\n|]+)/i', $m[1], $captionMatch);
+        preg_match('/\|\s*alt\s*=\s*([^\n|]+)/i', $m[1], $altMatch);
+        
+        $src = isset($srcMatch[1]) ? trim($srcMatch[1]) : '';
+        $caption = isset($captionMatch[1]) ? trim($captionMatch[1]) : '';
+        $alt = isset($altMatch[1]) ? trim($altMatch[1]) : '';
 
         if ($src === '') {
             return '';
         }
 
+        // ✅ Parsuj TYLKO linki wiki (bez całego parseInline)
+        $parsedCaption = preg_replace_callback(
+            '/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/',
+            function($matches) {
+                $target = trim($matches[1]);
+                $label = isset($matches[2]) ? trim($matches[2]) : $target;
+                $slug = str_replace(' ', '_', $target);
+                return '<a href="/page/' . htmlspecialchars($slug) . '" class="wiki-link">' 
+                     . htmlspecialchars($label) . '</a>';
+            },
+            $caption
+        );
+        
+        $altText = $alt !== '' ? $alt : strip_tags($parsedCaption);
+
         return
             '<figure class="right-image-box">' .
                 '<div class="right-image-inner">' .
-                    '<img src="' . htmlspecialchars($src) . '" alt="' . htmlspecialchars($alt) . '">' .
-                    ($caption !== ''
-                        ? '<figcaption class="right-image-caption">' . htmlspecialchars($caption) . '</figcaption>'
+                    '<img src="' . htmlspecialchars($src) . '" alt="' . htmlspecialchars($altText) . '">' .
+                    ($parsedCaption !== ''
+                        ? '<figcaption class="right-image-caption">' . $parsedCaption . '</figcaption>'
                         : ''
                     ) .
                 '</div>' .
@@ -1397,10 +1463,13 @@ private function parseRightImage(string $content): string
 }
 
 
+
+
+
 private function renderInfoboxPostac(array $params): string
 {
     $imie        = htmlspecialchars($params['imie'] ?? 'Nieznana postać');
-    $zdjecie     = trim($params['zdjecie'] ?? 'NA.png');
+    $zdjecie     = trim($params['zdjecie'] ?? '/uploads/NA.png');
 
     // dodatkowe zdjęcia
     $zdjecie2       = trim($params['zdjecie2'] ?? '');
@@ -1410,6 +1479,9 @@ private function renderInfoboxPostac(array $params): string
     $zdjecie2Label  = htmlspecialchars($params['zdjecie2_label'] ?? '2');
     $zdjecie3Label  = htmlspecialchars($params['zdjecie3_label'] ?? '3');
     $zdjecie4Label  = htmlspecialchars($params['zdjecie4_label'] ?? '4');
+
+        // ścieżka do fallbacku
+    $fallbackImg = '/uploads/NA.png';
 
     $wiekRaw     = trim($params['wiek'] ?? '');
     $pochodzenie = trim($params['pochodzenie'] ?? '');

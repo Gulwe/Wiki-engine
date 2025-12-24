@@ -12,6 +12,20 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
     <form id="upload-form" enctype="multipart/form-data">
         <input type="file" id="image-input" name="images[]" accept="image/*" multiple style="display:none;">
         
+        <!-- ✅ Wybór folderu -->
+        <div class="folder-selector">
+            <label for="folder-select">📁 Folder docelowy:</label>
+            <select id="folder-select" name="folder">
+                <option value="">📂 Główny folder (/uploads)</option>
+                <option value="bases">🏰 Bazy</option>
+                <option value="chars">👤 Postacie</option>
+                <option value="vehicles">🚗 Pojazdy</option>
+                <option value="maps">🗺️ Mapy</option>
+                <option value="misc">📦 Różne</option>
+                <option value="visuals">🗺️ Visuale</option>
+            </select>
+        </div>
+        
         <div class="upload-area" id="upload-area">
             <div class="upload-prompt">
                 <p>🖼️ Kliknij lub przeciągnij obrazki tutaj</p>
@@ -34,6 +48,7 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
                         <div class="media-info">
                             <strong><?= htmlspecialchars($media['original_name']) ?></strong><br>
                             <small>
+                                📁 <?= !empty($media['folder']) ? htmlspecialchars($media['folder']) : 'główny' ?><br>
                                 👤 <?= htmlspecialchars($media['uploader'] ?? 'Nieznany') ?><br>
                                 📅 <?= date('d.m.Y H:i', strtotime($media['uploaded_at'])) ?><br>
                                 📦 <?= round($media['file_size'] / 1024, 1) ?> KB
@@ -65,6 +80,43 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
     margin-top: 0;
     margin-bottom: 20px;
     color: var(--accent-main);
+}
+
+/* ✅ Folder Selector */
+.folder-selector {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.folder-selector label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95em;
+}
+
+.folder-selector select {
+    flex: 1;
+    max-width: 300px;
+    padding: 10px 14px;
+    font-size: 0.95em;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.folder-selector select:hover {
+    border-color: var(--accent-main);
+}
+
+.folder-selector select:focus {
+    outline: none;
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 .upload-area {
@@ -220,6 +272,17 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
     
     .media-actions {
         flex-direction: column;
+    }
+    
+    /* ✅ Responsywność selektora folderów */
+    .folder-selector {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .folder-selector select {
+        max-width: 100%;
+        width: 100%;
     }
 }
 </style>

@@ -1,31 +1,6 @@
 <?php
 // views/admin/links.php
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zewnętrzne linki - Admin</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .thumbnail-preview {
-            margin-top: 10px;
-            max-width: 200px;
-            border-radius: 8px;
-            border: 2px solid var(--border-subtle);
-        }
-        .thumbnail-cell img {
-            max-width: 80px;
-            max-height: 60px;
-            border-radius: 4px;
-            object-fit: cover;
-        }
-    </style>
-</head>
-<body>
-    <?php include __DIR__ . '/../partials/header.php'; ?>
-
     <div class="container">
         <h1>🔗 Zewnętrzne linki</h1>
 
@@ -272,5 +247,33 @@
             }
         }
     </script>
-</body>
-</html>
+<style>
+.thumbnail-preview {
+    max-width: 200px;
+    max-height: 120px;
+    border-radius: 8px;
+    border: 2px solid var(--border-subtle);
+    object-fit: cover;
+}
+
+.thumbnail-cell img {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+}
+
+.form-group input[type="file"] {
+    padding: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-primary);
+    width: 100%;
+}
+
+.form-group input[type="radio"] {
+    cursor: pointer;
+}
+</style>

@@ -4,6 +4,7 @@ $(document).ready(function() {
     const uploadArea = $('#upload-area');
     const fileInput = $('#image-input');
     const uploadStatus = $('#upload-status');
+    const folderSelect = $('#folder-select'); // ✅ Dodaj selektor folderu
 
     // Dodaj atrybut "multiple" do inputa (w HTML lub tutaj)
     fileInput.attr('multiple', true);
@@ -52,7 +53,7 @@ $(document).ready(function() {
         }
     });
 
-    // ✅ NOWA FUNKCJA: Masowy upload wielu plików
+    // ✅ ZAKTUALIZOWANA FUNKCJA: Masowy upload wielu plików z folderem
     function handleMultipleUpload(files) {
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         const maxSize = 5 * 1024 * 1024; // 5MB
@@ -81,6 +82,10 @@ $(document).ready(function() {
             validFilesCount++;
         }
 
+        // ✅ Dodaj wybrany folder do FormData
+        const selectedFolder = folderSelect.val();
+        formData.append('folder', selectedFolder);
+
         // Pokaż błędy walidacji
         if (invalidFiles.length > 0) {
             showStatus('error', `❌ Pominięto: ${invalidFiles.join(', ')}`);
@@ -93,7 +98,8 @@ $(document).ready(function() {
 
         // Upload prawidłowych plików
         if (validFilesCount > 0) {
-            showStatus('loading', `⏳ Uploading ${validFilesCount} plików...`);
+            const folderName = selectedFolder === '' ? 'główny folder' : selectedFolder;
+            showStatus('loading', `⏳ Uploading ${validFilesCount} plik(ów) do ${folderName}...`);
 
             $.ajax({
                 url: '/api/upload',
@@ -104,12 +110,19 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         const uploaded = response.uploaded || validFilesCount;
-                        showStatus('success', `✅ Uploaded ${uploaded} obrazków!`);
+                        showStatus('success', `✅ Wgrano ${uploaded} obrazek/ów do ${folderName}!`);
                         setTimeout(() => {
                             location.reload();
                         }, 1500);
                     } else {
-                        showStatus('error', '❌ Błąd: ' + (response.error || 'Nieznany błąd'));
+                        let errorMsg = '❌ Błąd: ' + (response.error || 'Nieznany błąd');
+                        
+                        // Pokaż szczegóły błędów jeśli są
+                        if (response.details && response.details.length > 0) {
+                            errorMsg += '\n' + response.details.join('\n');
+                        }
+                        
+                        showStatus('error', errorMsg);
                     }
                 },
                 error: function(xhr) {
@@ -146,9 +159,11 @@ $(document).ready(function() {
         e.stopPropagation();
         const url = $(this).data('url');
         copyToClipboard(url);
-        $(this).text('✅ Skopiowano!');
+        const btn = $(this);
+        const originalText = btn.text();
+        btn.text('✅ Skopiowano!');
         setTimeout(() => {
-            $(this).text('📋 Kopiuj URL');
+            btn.text(originalText);
         }, 2000);
     });
 
@@ -159,9 +174,11 @@ $(document).ready(function() {
         const filename = $(this).data('filename');
         const wikiSyntax = `{{image:${filename}}}`;
         copyToClipboard(wikiSyntax);
-        $(this).text('✅ Skopiowano!');
+        const btn = $(this);
+        const originalText = btn.text();
+        btn.text('✅ Skopiowano!');
         setTimeout(() => {
-            $(this).text('📝 Wiki Link');
+            btn.text(originalText);
         }, 2000);
     });
 
