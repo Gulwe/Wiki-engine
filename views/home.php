@@ -49,13 +49,6 @@ $iconMultiplayer     = BackgroundHelper::getNationIconForTheme($theme, 'multipla
         <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
             <a href="/page/new" class="btn">➕ Utwórz nową stronę</a>
         <?php endif; ?>
-
-        <a href="/categories" class="btn-outline">
-            <span>📂 Przeglądaj kategorie</span>
-        </a>
-        <?php if (!empty($_SESSION['role']) && $_SESSION['role'] !== 'viewer'): ?>
-            <a href="/syntax-help" class="btn-outline">📘 Pomoc składni</a>
-        <?php endif; ?>
     </div>
 
     <!-- SEKCJA KAMPANII I LORE -->

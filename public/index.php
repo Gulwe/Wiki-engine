@@ -156,7 +156,7 @@ if ($uri === '/page/new') {
             'content' => '',
             'page_id' => null,
         ];
-
+            Middleware::requireEditor();
         View::render('pages/edit', [
             'page' => $page,
             'templates' => $templates,
@@ -953,7 +953,7 @@ if ($uri === '/media') {
         ORDER BY m.uploaded_at DESC
     ");
     $mediaFiles = $stmt->fetchAll();
-    
+    Middleware::requireEditor();
     View::render('media', [
         'mediaFiles' => $mediaFiles,
         'pageTitle' => 'Galeria Obrazków',
@@ -981,7 +981,7 @@ if ($uri === '/admin') {
         'revisions' => $db->query("SELECT COUNT(*) FROM revisions")->fetchColumn(),
         'media' => $db->query("SELECT COUNT(*) FROM media")->fetchColumn()
     ];
-    
+        Middleware::requireEditor();
     View::render('admin/dashboard', [
         'stats' => $stats,
         'pageTitle' => 'Panel Admina'
@@ -998,7 +998,7 @@ if ($uri === '/admin/customize') {
     
     require_once __DIR__ . '/../models/Settings.php';
     $settings = new Settings();
-    
+        Middleware::requireEditor();
     View::render('admin/customize', [
         'settings' => $settings,
         'pageTitle' => 'Customizacja'
@@ -1056,7 +1056,7 @@ if ($uri === '/admin/users') {
         ) c ON u.user_id = c.user_id
         ORDER BY u.created_at DESC
     ")->fetchAll();
-    
+        Middleware::requireEditor();
     View::render('admin/users', [
         'users' => $users,
         'pageTitle' => 'Zarządzanie Użytkownikami'
@@ -1585,6 +1585,67 @@ if ($uri === '/diagnostic') {
     View::render('diagnostic', [
         'pageTitle' => 'Diagnostyka Systemu'
     ]);
+    exit;
+}
+
+// Zmiana hasła
+if ($uri === '/change-password') {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: /login');
+        exit;
+    }
+    
+    View::render('change-password', [
+        'pageTitle' => 'Zmiana hasła'
+    ]);
+    exit;
+}
+
+// Rejestracja
+if ($uri === '/register') {
+    if (isset($_SESSION['user_id'])) {
+        header('Location: /');
+        exit;
+    }
+    
+    View::render('register', [
+        'pageTitle' => 'Rejestracja'
+    ]);
+    exit;
+}
+
+// API: Rejestracja
+if ($uri === '/api/register' && $method === 'POST') {
+    header('Content-Type: application/json');
+    
+    if (isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'error' => 'Already logged in']);
+        exit;
+    }
+    
+    require_once __DIR__ . '/../controllers/AuthController.php';
+    $authController = new AuthController();
+    $result = $authController->register();
+    
+    echo json_encode($result);
+    exit;
+}
+
+
+// API: Zmiana hasła
+if ($uri === '/api/change-password' && $method === 'POST') {
+    header('Content-Type: application/json');
+    
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+        exit;
+    }
+    
+    require_once __DIR__ . '/../controllers/AuthController.php';
+    $authController = new AuthController();
+    $result = $authController->changePassword();
+    
+    echo json_encode($result);
     exit;
 }
 

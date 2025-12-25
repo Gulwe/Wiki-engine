@@ -56,17 +56,13 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
                             <span class="dropdown-icon">📁</span>
                             Kategorie
                         </a>
-                        <a href="/media" class="dropdown-item">
-                            <span class="dropdown-icon">🖼️</span>
-                            Galeria
-                        </a>
-                        <a href="/syntax-help" class="dropdown-item">
-                            <span class="dropdown-icon">📚</span>
-                            Składnia
-                        </a>
 
                         <?php if (!empty($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                             <div class="dropdown-divider"></div>
+                                                    <a href="/media" class="dropdown-item">
+                            <span class="dropdown-icon">🖼️</span>
+                            Galeria
+                        </a>
                             <a href="/admin" class="dropdown-item">
                                 <span class="dropdown-icon">⚙️</span>
                                 Panel Admina
@@ -97,18 +93,26 @@ $siteLogo    = ThemeLoader::get('site_logo', '');
                             <small><?= htmlspecialchars($_SESSION['role']) ?></small>
                         </div>
                         <div class="dropdown-divider"></div>
+                        <a href="/change-password" class="dropdown-item">
+                            <span class="dropdown-icon">🔑</span>
+                            Zmień hasło
+                        </a>
                         <a href="/logout" class="dropdown-item">
                             <span class="dropdown-icon">🚪</span>
                             Wyloguj
                         </a>
                     </div>
                 </div>
-            <?php else: ?>
-                <a href="/login" class="nav-item nav-login">
-                    <span class="nav-icon">🔐</span>
-                    <span class="nav-text">Zaloguj</span>
-                </a>
-            <?php endif; ?>
+<?php else: ?>
+    <a href="/register" class="nav-item nav-register">
+        <span class="nav-icon">✍️</span>
+        <span class="nav-text">Rejestracja</span>
+    </a>
+    <a href="/login" class="nav-item nav-login">
+        <span class="nav-icon">🔐</span>
+        <span class="nav-text">Zaloguj</span>
+    </a>
+<?php endif; ?>
 
             <!-- Custom Theme Selector -->
             <div class="custom-theme-selector">
