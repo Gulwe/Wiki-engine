@@ -1419,22 +1419,33 @@ private function parseInfobox(string $content): string
 
 private function parseRightImage(string $content): string
 {
-    $pattern = '/\{\{right-image(.*?)\}\}/s';
+    // ✅ Bardziej precyzyjny regex - łapie dokładnie {{right-image...}}
+    $pattern = '/\{\{right-image\s*\n?(.*?)\n?\}\}/is';
 
     return preg_replace_callback($pattern, function ($m) {
-        preg_match('/\|\s*src\s*=\s*([^\n|]+)/i', $m[1], $srcMatch);
-        preg_match('/\|\s*caption\s*=\s*([^\n|]+)/i', $m[1], $captionMatch);
-        preg_match('/\|\s*alt\s*=\s*([^\n|]+)/i', $m[1], $altMatch);
+        $paramsRaw = $m[1];
         
-        $src = isset($srcMatch[1]) ? trim($srcMatch[1]) : '';
-        $caption = isset($captionMatch[1]) ? trim($captionMatch[1]) : '';
-        $alt = isset($altMatch[1]) ? trim($altMatch[1]) : '';
+        // Parse parametrów linia po linii
+        $params = [];
+        $lines = explode("\n", $paramsRaw);
+        
+        foreach ($lines as $line) {
+            if (preg_match('/^\s*\|\s*([a-z_]+)\s*=\s*(.+)$/i', $line, $match)) {
+                $key = trim($match[1]);
+                $value = trim($match[2]);
+                $params[$key] = $value;
+            }
+        }
+        
+        $src = $params['src'] ?? '';
+        $caption = $params['caption'] ?? '';
+        $alt = $params['alt'] ?? '';
 
         if ($src === '') {
-            return '';
+            return ''; // Usuń szablon jeśli brak src
         }
 
-        // ✅ Parsuj TYLKO linki wiki (bez całego parseInline)
+        // Parsuj linki wiki w caption
         $parsedCaption = preg_replace_callback(
             '/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/',
             function($matches) {
@@ -1449,8 +1460,7 @@ private function parseRightImage(string $content): string
         
         $altText = $alt !== '' ? $alt : strip_tags($parsedCaption);
 
-        return
-            '<figure class="right-image-box">' .
+        $html = '<figure class="right-image-box">' .
                 '<div class="right-image-inner">' .
                     '<img src="' . htmlspecialchars($src) . '" alt="' . htmlspecialchars($altText) . '">' .
                     ($parsedCaption !== ''
@@ -1459,8 +1469,12 @@ private function parseRightImage(string $content): string
                     ) .
                 '</div>' .
             '</figure>';
+        
+        return $html;
     }, $content);
 }
+
+
 
 
 
