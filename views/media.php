@@ -12,7 +12,7 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
     <form id="upload-form" enctype="multipart/form-data">
         <input type="file" id="image-input" name="images[]" accept="image/*" multiple style="display:none;">
         
-        <!-- ✅ Wybór folderu -->
+        <!-- Wybór folderu -->
         <div class="folder-selector">
             <label for="folder-select">📁 Folder docelowy:</label>
             <select id="folder-select" name="folder">
@@ -67,7 +67,6 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
 
 
 <style>
-/* Upload Section */
 .upload-section {
     margin: 30px 0;
     padding: 30px;
@@ -82,7 +81,7 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
     color: var(--accent-main);
 }
 
-/* ✅ Folder Selector */
+/* Folder Selector */
 .folder-selector {
     margin-bottom: 20px;
     display: flex;
@@ -274,7 +273,7 @@ require_once __DIR__ . '/../core/ThemeLoader.php';
         flex-direction: column;
     }
     
-    /* ✅ Responsywność selektora folderów */
+    /* Responsywność selektora folderów */
     .folder-selector {
         flex-direction: column;
         align-items: flex-start;

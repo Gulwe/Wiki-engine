@@ -535,23 +535,6 @@ private function parseTables(string $content): string {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // === CYTATY ===
     private function parseQuotes(string $content): string {
         // > Cytat
@@ -845,13 +828,6 @@ private function renderInfoboxBaza(array $params): string
     return $html;
 }
 
-
-
-
-
-
-
-
 private function renderModCard(array $params): string
 {
     $name  = trim($params['name'] ?? '');
@@ -1030,9 +1006,6 @@ private function renderMap(array $params): string
 
     return $html;
 }
-
-
-
 
 
     // === KARTY POSTACI ===
@@ -1475,11 +1448,6 @@ private function parseRightImage(string $content): string
 }
 
 
-
-
-
-
-
 private function renderInfoboxPostac(array $params): string
 {
     $imie        = htmlspecialchars($params['imie'] ?? 'Nieznana postać');
@@ -1709,8 +1677,6 @@ private function renderInfoboxPostac(array $params): string
 }
 
 
-
-
 /**
  * Sprawdź czy pole jest wielolinijkowe
  */
@@ -1751,8 +1717,6 @@ private function formatMultilineField($value) {
 }
 
 
-
-
 // === HELPER: Generuj URL flagi ===
 private function generateFlagSrc(string $code): string {
     // Jeśli to dwuliterowy kod ISO
@@ -1764,8 +1728,6 @@ private function generateFlagSrc(string $code): string {
     // W przeciwnym razie lokalna flaga
     return "/symbols/{$code}.png";
 }
-
-
 
     // === RENDER: INFOBOX JEDNOSTKA ===
     private function renderInfoboxJednostka(array $params): string {

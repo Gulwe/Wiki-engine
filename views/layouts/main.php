@@ -12,21 +12,32 @@ $currentPage = $currentPage ?? basename($_SERVER['REQUEST_URI'], '.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="<?= BASE_PATH !== '' ? BASE_PATH . '/' : '/' ?>">
     <title><?= $pageTitle ?? htmlspecialchars($siteName) ?></title>
-    <link rel="icon" type="image/x-icon" href="/css/favicon.ico"> 
+    <link rel="icon" type="image/x-icon" href="
+css/favicon.ico"> 
 
     <!-- CSS bazowe -->
-    <link rel="stylesheet" href="/css/base.css">
-    <link rel="stylesheet" href="/css/components.css"> 
-    <link rel="stylesheet" href="/css/layout.css">
-    <link rel="stylesheet" href="/css/wiki.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="
+css/base.css">
+    <link rel="stylesheet" href="
+css/components.css"> 
+    <link rel="stylesheet" href="
+css/layout.css">
+    <link rel="stylesheet" href="
+css/wiki.css">
+    <link rel="stylesheet" href="
+css/admin.css">
     
     <!-- Motywy -->
-    <link rel="stylesheet" href="/css/themes/sos.css">
-    <link rel="stylesheet" href="/css/themes/ru.css">
-    <link rel="stylesheet" href="/css/themes/zsi.css">
-    <link rel="stylesheet" href="/css/themes/am.css">
+    <link rel="stylesheet" href="
+css/themes/sos.css">
+    <link rel="stylesheet" href="
+css/themes/ru.css">
+    <link rel="stylesheet" href="
+css/themes/zsi.css">
+    <link rel="stylesheet" href="
+css/themes/am.css">
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

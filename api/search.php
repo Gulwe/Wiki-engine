@@ -12,7 +12,7 @@ if (strlen($query) < 3) {
 
 $db = Database::getInstance()->getConnection();
 
-// Fulltext search w MySQL
+// Fulltext wyszukiwarka w MySQL
 $stmt = $db->prepare("
     SELECT p.page_id, p.slug, p.title, 
            SUBSTRING(r.content, 1, 200) as excerpt

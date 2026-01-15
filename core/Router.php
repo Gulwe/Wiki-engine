@@ -11,7 +11,7 @@ class Router {
     }
     
     public function dispatch(string $method, string $uri): void {
-        // Usuñ query string
+        // UsuÅ„ query string
         $uri = parse_url($uri, PHP_URL_PATH);
         
         foreach ($this->routes as $route) {

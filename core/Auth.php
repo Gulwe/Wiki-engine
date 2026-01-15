@@ -6,7 +6,7 @@ class Auth {
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
         
-        // Konfiguracja sesji dla bezpieczeÒstwa
+        // Konfiguracja sesji dla bezpiecze√±stwa
         ini_set('session.cookie_httponly', 1);
         ini_set('session.use_only_cookies', 1);
         ini_set('session.cookie_secure', 1); // Wymaga HTTPS
@@ -18,12 +18,12 @@ class Auth {
     }
     
     public function register(string $username, string $email, string $password): bool {
-        // Walidacja si≥y has≥a
+        // Walidacja si≈Çy has≈Ça
         if (strlen($password) < 8) {
             throw new Exception('Password must be at least 8 characters');
         }
         
-        // Hash has≥a (bcrypt z PHP 7.4)
+        // Hash hasa (bcrypt z PHP 7.4)
         $passwordHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
         
         try {
@@ -60,7 +60,7 @@ class Auth {
             return false;
         }
         
-        // Weryfikacja has≥a
+        // Weryfikacja has≈Ça
         if (!password_verify($password, $user['password_hash'])) {
             return false;
         }
@@ -80,7 +80,7 @@ class Auth {
     }
     
     public function logout(): void {
-        // WyczyúÊ sesjÍ
+        // Wyczy≈õƒá sesje
         $_SESSION = [];
         
         // Zniszcz cookie sesji
@@ -88,7 +88,7 @@ class Auth {
             setcookie(session_name(), '', time() - 3600, '/');
         }
         
-        // Zniszcz sesjÍ
+        // Zniszcz sesje
         session_destroy();
     }
     
@@ -97,7 +97,7 @@ class Auth {
             return false;
         }
         
-        // Timeout sesji po 30 minutach nieaktywnoúci
+        // Timeout sesji po 30 minutach nieaktywno≈ìci
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
             $this->logout();
             return false;

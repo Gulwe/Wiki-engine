@@ -203,7 +203,7 @@ $(document).ready(function() {
         return null;
     }
 
-    // --- NOWE: przeładowanie ikon po zmianie motywu ---
+    // --- przeładowanie ikon po zmianie motywu ---
     function reloadThemeIcons(theme) {
         $.getJSON('/api/theme_icons.php', { theme: theme })
             .done(function (icons) {

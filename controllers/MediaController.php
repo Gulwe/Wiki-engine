@@ -46,7 +46,7 @@ private function getUploadDir(string $folder): string {
 }
 
     
-    // ✅ NOWA FUNKCJA: Slugify z polskimi znakami
+    //Slugify z polskimi znakami
     private function slugifyFilename(string $filename): string {
         $info = pathinfo($filename);
         $name = $info['filename'];
@@ -128,7 +128,6 @@ private function getUploadDir(string $folder): string {
                 continue;
             }
             
-            // ✅ Użyj slugify
             $safeFilename = $this->slugifyFilename($file['name']);
             
             // Sprawdź duplikaty
@@ -201,7 +200,6 @@ private function getUploadDir(string $folder): string {
         $folder = $this->getTargetFolder();
         $uploadDir = $this->getUploadDir($folder);
         
-        // ✅ Użyj slugify
         $safeFilename = $this->slugifyFilename($file['name']);
         
         // Sprawdź duplikaty
@@ -254,7 +252,7 @@ private function saveToDatabase(string $filename, string $originalName, string $
 }
 
     
-    // ✅ NOWA METODA: Zwróć listę dostępnych folderów
+    // Zwróć listę dostępnych folderów
     public function getFolders(): array {
         return $this->allowedFolders;
     }

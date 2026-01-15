@@ -30,13 +30,13 @@ class AdminController
                 : 0,
         ];
 
-        // Jeśli masz Analytics, możesz dodać więcej:
+        // Analytics
         $analyticsModel = new Analytics();
         if (method_exists($analyticsModel, 'getTotalViews')) {
             $stats['total_views'] = $analyticsModel->getTotalViews();
         }
 
-        // Ostatnie strony (jeśli masz taką metodę)
+        // Ostatnie strony
         $recentPages = method_exists($pageModel, 'getRecent')
             ? $pageModel->getRecent(10)
             : [];
@@ -124,7 +124,7 @@ class AdminController
             if (strpos($key, 'setting_') === 0) {
                 $settingKey = substr($key, 8);
 
-                // Jeśli właśnie uploadowaliśmy logo, ignoruj URL
+                // Jeśli jest zuploadowane logo, ignoruj URL
                 if ($settingKey === 'site_logo' && $logoUploaded) {
                     continue;
                 }
@@ -335,7 +335,7 @@ class AdminController
         exit;
     }
     
-    // ========================================
+// ========================================
 // === SZABLONY ===
 // ========================================
 
